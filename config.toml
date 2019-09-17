@@ -1,5 +1,4 @@
 file = "servers.conf"
-sql = "select server, port from t_server where state=1"
-mysql = "user:pass@tcp(127.0.0.1:3306)/mydb"
+mysql = "user:pass@tcp(127.0.0.1:33306)/mydb"
 interval = "10s"
 reload = ""
