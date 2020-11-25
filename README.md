@@ -78,4 +78,7 @@ Nginx 各种timeout：
 1. resolver_timeout 5s; # 域名解析超时，默认30s。
 1. [Nginx的超时timeout配置详解](https://juejin.im/post/5b696a24e51d45191e0d3e56)
 
-                      
+## reference
+
+1. [nacos-sdk-go](https://github.com/nacos-group/nacos-sdk-go)
+1. [slides HCL: A human-friendly language for developers and operators](https://speakerdeck.com/anubhavmishra/hcl-a-human-friendly-language-for-developers-and-operators)

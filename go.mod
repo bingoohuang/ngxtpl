@@ -1,4 +1,4 @@
-module github.com/bingoohuang/nginxtemplate
+module github.com/bingoohuang/ngxtpl
 
 go 1.12
 

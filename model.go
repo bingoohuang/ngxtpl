@@ -1,4 +1,4 @@
-package nginxtemplate
+package ngxtpl
 
 import (
 	"fmt"

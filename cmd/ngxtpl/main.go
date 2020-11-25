@@ -6,7 +6,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/bingoohuang/nginxtemplate"
+	"github.com/bingoohuang/ngxtpl"
 
 	"github.com/gobars/cmd"
 
@@ -39,7 +39,7 @@ func main() {
 	defer t.Stop()
 
 	for {
-		servers := nginxtemplate.RefreshServers(app.Db)
+		servers := ngxtpl.RefreshServers(app.Db)
 		if app.Servers == servers {
 			continue
 		}
