@@ -2,7 +2,6 @@ package ngxtpl
 
 import (
 	"bytes"
-	fmt "fmt"
 	"io/ioutil"
 	"os"
 	"path/filepath"
@@ -43,7 +42,6 @@ func (t *Tpl) Execute(data interface{}) error {
 	}
 
 	if bytes.Equal(newContent, oldContent) {
-		logrus.Infof("there is no change for %s", t.Destination)
 		return nil
 	}
 
@@ -115,7 +113,7 @@ func (t *Tpl) parseSource() error {
 }
 
 func (t *Tpl) parseDestination() error {
-	if t.Destination == "stdout" {
+	if t.Destination == "" {
 		return nil
 	}
 
@@ -149,8 +147,7 @@ func (t *Tpl) readDestination() ([]byte, error) {
 }
 
 func (t *Tpl) writeDestination(content []byte) error {
-	if t.Destination == "stdout" {
-		fmt.Println(string(content))
+	if t.Destination == "" {
 		return nil
 	}
 
