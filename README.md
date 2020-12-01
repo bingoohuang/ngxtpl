@@ -1,5 +1,21 @@
-# nginx-template
-golang nginx template 
+# ngxtpl
+
+golang nginx template.
+
+build: `make install`
+
+## redis
+
+1. create a demo config file `ngxtpl --demo`.
+1. edit the created `demo.hcl` config file.
+1. put some data into redis.
+    - `redis-cli -x hset __gateway_redis__ upstreams  < testdata/upstreams.json`
+    - `redis-cli -x set upstreams < testdata/upstreams.json` 
+1. run `ngxtpl -c demo.hcl`.
+
+## mysql
+
+TBC.
 
 ```bash
 docker run -d --name mysql \
@@ -24,9 +40,21 @@ MYSQL_PWD=pass mysql  -h 127.0.0.1 -P 33306 -u user -D mydb
 ```
 
 ```sql
-drop table if exists t_server;
-create table t_server(
+drop table if exists t_upstreams;
+
+create table t_upstreams (
+   id int auto_increment not null comment '自增ID',
+   name varchar(60) not null comment 'upstream名称',
+   keepalive int not null default 0 comment '连接池', 
+   ip_hash tinyint not null default 0 comment 'ip_hash',
+   resolver varchar(60)  null comment 'resolver',
+   primary key (id)
+)ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+drop table if exists t_servers;
+create table t_servers(
    id int auto_increment not null comment '自增ID。',
+   upstream_name varchar(60) not null comment 'upstream名称',
    address varchar(60) not null comment '服务器地址。',
    port int not null default 80 comment '端口号。',
    weight int not null default 1 comment '权重。',
