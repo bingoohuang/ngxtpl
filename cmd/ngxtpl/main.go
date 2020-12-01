@@ -6,6 +6,7 @@ import (
 	"os"
 	"strings"
 
+	"github.com/bingoohuang/golog"
 	"github.com/bingoohuang/ngxtpl"
 	"github.com/markbates/pkger"
 	"github.com/sirupsen/logrus"
@@ -14,6 +15,8 @@ import (
 )
 
 func main() {
+	golog.SetupLogrus(nil, "", "")
+
 	demoCfg := pflag.BoolP("demo", "", false, "create demo.hcl file")
 	cfgs := pflag.StringSliceP("cfgs", "c", nil, "config files")
 	pflag.Parse()
