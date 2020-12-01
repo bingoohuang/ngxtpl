@@ -18,6 +18,8 @@ redis {
 
 tpl {
   dataSource = "redis"
+  # 不设置interval，将只会运行一次
+  # 设置了interval，则会进入循环，每次间隔interval时间后，执行一次
   #interval = "10s"
   source = "testdata/upstreams.tpl"
   destination = "testdata/upstreams.conf"

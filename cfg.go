@@ -19,6 +19,9 @@ type Cfg struct {
 	dataSource DataSource
 }
 
+// Cfgs is alias for slice of Cfg.
+type Cfgs []Cfg
+
 // Parse parses the config.
 func (c *Cfg) Parse() error {
 	if err := c.parseDataSource(); err != nil {
@@ -44,14 +47,22 @@ func (c *Cfg) parseDataSource() (err error) {
 	return errors.Wrapf(ErrCfg, "Unknown dataSource %s, it should be redis or mysql", c.Tpl.DataSource)
 }
 
-// DecodeCfgFile decodes the config file to Cfg struct.
-func DecodeCfgFile(cfgFile string) (cfg Cfg) {
-	if err := hcl.Decode(&cfg, string(ReadFile(cfgFile))); err != nil {
-		panic(err)
-	}
+// DecodeCfgFiles decodes the config files to Cfg structs.
+func DecodeCfgFiles(cfgFiles []string) (cfgs Cfgs) {
+	cfgs = make([]Cfg, len(cfgFiles))
 
-	if err := cfg.Parse(); err != nil {
-		panic(err)
+	for i, cfgFile := range cfgFiles {
+		var cfg Cfg
+
+		if err := hcl.Decode(&cfg, string(ReadFile(cfgFile))); err != nil {
+			panic(err)
+		}
+
+		if err := cfg.Parse(); err != nil {
+			panic(err)
+		}
+
+		cfgs[i] = cfg
 	}
 
 	return

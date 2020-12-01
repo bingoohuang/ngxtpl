@@ -15,7 +15,7 @@ import (
 
 func main() {
 	demoCfg := pflag.BoolP("demo", "", false, "create demo.hcl file")
-	cfg := pflag.StringP("cfg", "c", "", "config file")
+	cfgs := pflag.StringSliceP("cfgs", "c", nil, "config files")
 	pflag.Parse()
 
 	if pflag.NArg() > 0 {
@@ -29,12 +29,12 @@ func main() {
 		os.Exit(0)
 	}
 
-	if *cfg == "" {
+	if len(*cfgs) == 0 {
 		pflag.PrintDefaults()
 		return
 	}
 
-	ngxtpl.DecodeCfgFile(*cfg).Run()
+	ngxtpl.DecodeCfgFiles(*cfgs).Run()
 }
 
 func createDemoCfg() {
