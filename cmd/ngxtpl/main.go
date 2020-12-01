@@ -40,7 +40,7 @@ func main() {
 func createDemoCfg() {
 	const demoHcl = "./demo.hcl"
 	if v, err := os.Stat(demoHcl); err == nil && !v.IsDir() {
-		fmt.Printf(demoHcl, "exists already\n")
+		fmt.Printf("%s exists already\n", demoHcl)
 		os.Exit(0)
 	}
 
@@ -49,5 +49,5 @@ func createDemoCfg() {
 		panic(err)
 	}
 
-	fmt.Printf(demoHcl, "created\n")
+	fmt.Printf("%s created\n", demoHcl)
 }

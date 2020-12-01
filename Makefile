@@ -12,7 +12,7 @@ sec:
 	@echo "[OK] Go security check was completed!"
 
 init:
-	export GOPROXY=https://goproxy.cn
+	export GOPROXY=https://goproxy.io
 	pkger
 
 lint:

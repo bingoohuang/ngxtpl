@@ -5,24 +5,6 @@ import (
 	"github.com/pkg/errors"
 )
 
-// Upstream defines the data structure for nginx upstream.
-type Upstream struct {
-	Name    string   `json:"name"`
-	Servers []Server `json:"servers"`
-}
-
-// Server struct by http://nginx.org/en/docs/http/ngx_http_upstream_module.html
-type Server struct {
-	Address     string `gorm:"address" json:"address"`
-	Port        int    `gorm:"port" json:"port"`
-	Weight      int    `gorm:"weight" json:"weight"`            // eg. weight=5， sets the weight of the server.
-	MaxConns    int    `gorm:"max_conns" json:"maxConns"`       // Default value is zero, meaning there is no limit.
-	MaxFails    int    `gorm:"max_fails" json:"maxFails"`       // By default, the number of unsuccessful attempts is set to 1
-	FailTimeout string `gorm:"fail_timeout" json:"failTimeout"` // By default, the parameter is set to 10 seconds.
-	Backup      bool   `gorm:"backup" json:"backup"`
-	SlowStart   string `gorm:"slow_start" json:"slowStart"` // Default value is zero, i.e. slow start is disabled.
-}
-
 // DataSource defines the data source interface for reading the template data.
 type DataSource interface {
 	Read() (interface{}, error)

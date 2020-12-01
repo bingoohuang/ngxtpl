@@ -71,16 +71,12 @@ func (t *Tpl) Parse() error {
 
 func (t *Tpl) parseInterval() error {
 	if t.Interval == "" {
-		t.Interval = "10s"
+		t.Interval = "0"
 	}
 
 	v, err := time.ParseDuration(t.Interval)
 	if err != nil {
 		return err
-	}
-
-	if v < 10*time.Second {
-		v = 10 * time.Second
 	}
 
 	t.interval = v

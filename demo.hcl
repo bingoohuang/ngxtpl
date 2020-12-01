@@ -18,8 +18,8 @@ redis {
 
 tpl {
   dataSource = "redis"
-  interval = "10s"
-  source = "assets/upstreams.tpl"
+  #interval = "10s"
+  source = "testdata/upstreams.tpl"
   destination = "testdata/upstreams.conf"
   perms = 0600
   command = "echo reloaded"

@@ -8,9 +8,6 @@ import (
 
 // Run runs the config.
 func (c Cfg) Run() {
-	t := time.NewTicker(c.Tpl.interval)
-	defer t.Stop()
-
 	for {
 		m, err := c.dataSource.Read()
 		if err != nil {
@@ -21,6 +18,10 @@ func (c Cfg) Run() {
 			logrus.Warnf("failed to execute tpl: %v", err)
 		}
 
-		<-t.C
+		if c.Tpl.interval == 0 {
+			return
+		}
+
+		time.Sleep(c.Tpl.interval)
 	}
 }

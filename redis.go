@@ -28,9 +28,9 @@ func (r Redis) Read() (interface{}, error) {
 	ctx := context.Background()
 
 	var (
-		v         string
-		upstreams []Upstream
-		err       error
+		v    string
+		data map[string]interface{}
+		err  error
 	)
 
 	const sep = " "
@@ -50,12 +50,12 @@ func (r Redis) Read() (interface{}, error) {
 		return nil, err
 	}
 
-	err = json.Unmarshal([]byte(v), &upstreams)
+	err = json.Unmarshal([]byte(v), &data)
 	if err != nil {
 		return nil, err
 	}
 
-	return upstreams, nil
+	return data, nil
 }
 
 // Parse parse the redis config.
