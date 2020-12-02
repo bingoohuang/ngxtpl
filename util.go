@@ -2,10 +2,15 @@ package ngxtpl
 
 import (
 	"context"
+	"fmt"
 	"io/ioutil"
 	"os"
 	"os/signal"
+	"strings"
 	"syscall"
+
+	"github.com/sirupsen/logrus"
+	"github.com/spf13/pflag"
 
 	"github.com/markbates/pkger"
 )
@@ -70,4 +75,30 @@ func SetupSingalsWithContext(parent context.Context, sig ...os.Signal) context.C
 	}()
 
 	return ctx
+}
+
+// PflagParse parses the plag and check unknown args.
+func PflagParse() {
+	pflag.Parse()
+
+	if pflag.NArg() > 0 {
+		logrus.Errorf("Unknown args %s\n", strings.Join(pflag.Args(), " "))
+		pflag.PrintDefaults()
+		os.Exit(-1)
+	}
+}
+
+// CreateDemoCfg  creates a demo config file with name demoHclFile.
+func CreateDemoCfg(demoHclFile string) {
+	if v, err := os.Stat(demoHclFile); err == nil && !v.IsDir() {
+		fmt.Printf("%s exists already\n", demoHclFile)
+		os.Exit(0)
+	}
+
+	v := ReadPkger(pkger.Include("/assets/cfg.hcl"))
+	if err := ioutil.WriteFile(demoHclFile, v, 0644); err != nil {
+		panic(err)
+	}
+
+	fmt.Printf("%s created\n", demoHclFile)
 }
