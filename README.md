@@ -11,7 +11,9 @@ build: `make install`
 1. put some data into redis.
     - `redis-cli -x hset __gateway_redis__ upstreams  < testdata/upstreams.json`
     - `redis-cli -x set upstreams < testdata/upstreams.json` 
+    - `redis-cli -x set realIps  < testdata/set_real_ip_from.json`
 1. run `ngxtpl -c demo.hcl`.
+1. multiple config file run `ngxtpl -c demo.hcl -c demo_realIps.hcl`
 
 ## mysql
 

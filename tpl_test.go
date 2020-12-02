@@ -3,6 +3,7 @@ package ngxtpl_test
 import (
 	"bytes"
 	"encoding/json"
+	"fmt"
 	"html/template"
 	"io/ioutil"
 	"testing"
@@ -17,6 +18,7 @@ type Data struct {
 // Upstream defines the data structure for nginx upstream.
 type Upstream struct {
 	Name    string   `json:"name"`
+	State   string   `json:"state"`
 	Servers []Server `json:"servers"`
 }
 
@@ -43,7 +45,8 @@ func TestUpstreamsTemplate(t *testing.T) {
 	var out bytes.Buffer
 	data := Data{
 		Upstreams: []Upstream{{
-			Name: "service1",
+			Name:  "service1",
+			State: "1",
 			Servers: []Server{
 				{
 					Address: "127.0.0.1",
@@ -56,7 +59,11 @@ func TestUpstreamsTemplate(t *testing.T) {
 		}},
 	}
 
-	assert.Nil(t, tmpl.Execute(&out, ToMap(data)))
+	err = tmpl.Execute(&out, ToMap(data))
+	if err != nil {
+		fmt.Printf("err %v\n", err)
+	}
+	assert.Nil(t, err)
 	assert.Equal(t,
 		`upstream service1-pool {
 	least_conn;
@@ -80,7 +87,8 @@ func TestUpstreamsTemplate(t *testing.T) {
 	data = Data{
 		Upstreams: []Upstream{
 			{
-				Name: "service1",
+				Name:  "service1",
+				State: "1",
 				Servers: []Server{
 					{
 						Address: "127.0.0.1",
@@ -91,7 +99,8 @@ func TestUpstreamsTemplate(t *testing.T) {
 					},
 				},
 			}, {
-				Name: "service2",
+				Name:  "service2",
+				State: "1",
 				Servers: []Server{
 					{
 						Address: "127.0.0.1",
@@ -100,6 +109,20 @@ func TestUpstreamsTemplate(t *testing.T) {
 					{
 						Address: "127.0.0.1",
 						Port:    8202,
+					},
+					s3,
+				},
+			}, {
+				Name:  "service3",
+				State: "0",
+				Servers: []Server{
+					{
+						Address: "127.0.0.1",
+						Port:    9201,
+					},
+					{
+						Address: "127.0.0.1",
+						Port:    9202,
 					},
 					s3,
 				},
