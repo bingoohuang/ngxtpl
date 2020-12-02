@@ -79,16 +79,17 @@ func DecodeCfgFiles(cfgFiles []string) (cfgs Cfgs) {
 
 // Run runs the config.
 func (c Cfg) Run() {
+	defer c.Tpl.resetTicker()
+
 	m, err := c.dataSource.Read()
 	if err != nil {
 		logrus.Warnf("failed to read template data: %v", err)
+		return
 	}
 
 	if err := c.Tpl.Execute(m); err != nil {
 		logrus.Warnf("failed to execute tpl: %v", err)
 	}
-
-	c.Tpl.resetTicker()
 }
 
 // Cfgs is alias for slice of Cfg.
