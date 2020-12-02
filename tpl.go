@@ -25,6 +25,7 @@ type Tpl struct {
 
 	interval time.Duration
 	source   *template.Template
+	tiker    *time.Ticker
 }
 
 // Execute executes the template.
@@ -80,7 +81,18 @@ func (t *Tpl) parseInterval() error {
 	}
 
 	t.interval = v
+
+	if t.interval > 0 {
+		t.tiker = time.NewTicker(t.interval)
+	}
+
 	return nil
+}
+
+func (t *Tpl) resetTicker() {
+	if t.tiker != nil {
+		t.tiker.Reset(t.interval)
+	}
 }
 
 func (t *Tpl) parseSource() error {

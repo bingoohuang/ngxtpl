@@ -1,7 +1,11 @@
 package ngxtpl
 
 import (
+	"context"
 	"io/ioutil"
+	"os"
+	"os/signal"
+	"syscall"
 
 	"github.com/markbates/pkger"
 )
@@ -42,4 +46,28 @@ func ReadFileE(filename string) ([]byte, error) {
 	}
 
 	return d, nil
+}
+
+// SetupSingals setup the signal.
+func SetupSingals(sig ...os.Signal) context.Context {
+	return SetupSingalsWithContext(context.Background(), sig...)
+}
+
+// SetupSingalsWithContext setup the signal.
+func SetupSingalsWithContext(parent context.Context, sig ...os.Signal) context.Context {
+	ch := make(chan os.Signal, 1)
+	ctx, cancel := context.WithCancel(parent)
+
+	if len(sig) == 0 {
+		sig = []os.Signal{syscall.SIGINT, syscall.SIGTERM}
+	}
+
+	signal.Notify(ch, sig...)
+
+	go func() {
+		<-ch
+		cancel()
+	}()
+
+	return ctx
 }

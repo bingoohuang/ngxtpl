@@ -1,6 +1,9 @@
 package ngxtpl
 
 import (
+	"github.com/sirupsen/logrus"
+	"time"
+
 	"github.com/hashicorp/hcl"
 	"github.com/pkg/errors"
 )
@@ -18,9 +21,6 @@ type Cfg struct {
 
 	dataSource DataSource
 }
-
-// Cfgs is alias for slice of Cfg.
-type Cfgs []Cfg
 
 // Parse parses the config.
 func (c *Cfg) Parse() error {
@@ -47,6 +47,14 @@ func (c *Cfg) parseDataSource() (err error) {
 	return errors.Wrapf(ErrCfg, "Unknown dataSource %s, it should be redis or mysql", c.Tpl.DataSource)
 }
 
+func (c *Cfg) tikerC() <-chan time.Time {
+	if c.Tpl.tiker != nil {
+		return c.Tpl.tiker.C
+	}
+
+	return nil
+}
+
 // DecodeCfgFiles decodes the config files to Cfg structs.
 func DecodeCfgFiles(cfgFiles []string) (cfgs Cfgs) {
 	cfgs = make([]Cfg, len(cfgFiles))
@@ -66,4 +74,68 @@ func DecodeCfgFiles(cfgFiles []string) (cfgs Cfgs) {
 	}
 
 	return
+}
+
+// Run runs the config.
+func (c Cfg) Run() {
+	m, err := c.dataSource.Read()
+	if err != nil {
+		logrus.Warnf("failed to read template data: %v", err)
+	}
+
+	if err := c.Tpl.Execute(m); err != nil {
+		logrus.Warnf("failed to execute tpl: %v", err)
+	}
+
+	c.Tpl.resetTicker()
+}
+
+// Cfgs is alias for slice of Cfg.
+type Cfgs []Cfg
+
+// Run runs the configs.
+func (c Cfgs) Run() {
+	agg := make(chan int)
+	aggSize := 0
+
+	singalCtx := SetupSingals()
+
+	for i, cfg := range c {
+		if cfg.Tpl.interval == 0 {
+			continue
+		}
+
+		go func(c chan int, i int) {
+			for {
+				select {
+				case <-singalCtx.Done():
+					return
+				case <-cfg.tikerC():
+					agg <- i
+				}
+			}
+		}(agg, i)
+
+		aggSize++
+	}
+
+	for _, cfg := range c {
+		cfg.Run()
+	}
+
+	if aggSize == 0 {
+		logrus.Infof("finished")
+		return
+	}
+
+	for {
+		select {
+		case <-singalCtx.Done():
+			logrus.Info("exit by signal")
+			return
+		case i := <-agg:
+			cfg := c[i]
+			cfg.Run()
+		}
+	}
 }
