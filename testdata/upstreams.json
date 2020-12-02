@@ -3,25 +3,26 @@
     {
       "name": "service1",
       "state": "1",
+      "keepalive": 10,
       "servers": [
         {
           "address": "127.0.0.1",
-          "port": 8001,
+          "port": "8001",
           "state": "1"
         },
         {
           "address": "127.0.0.1",
-          "port": 8002,
+          "port": "8002",
           "state": "1"
         },
         {
           "address": "127.0.0.1",
-          "port": 8003,
+          "port": "8003",
           "state": "1"
         },
         {
           "address": "127.0.0.1",
-          "port": 8004,
+          "port": "8004",
           "state": "0"
         }
       ]

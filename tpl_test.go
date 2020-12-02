@@ -17,20 +17,21 @@ type Data struct {
 
 // Upstream defines the data structure for nginx upstream.
 type Upstream struct {
-	Name    string   `json:"name"`
-	State   string   `json:"state"`
-	Servers []Server `json:"servers"`
+	Name      string   `json:"name"`
+	State     string   `json:"state"`
+	Keepalive string   `json:"keepalive"`
+	Servers   []Server `json:"servers"`
 }
 
 // Server struct by http://nginx.org/en/docs/http/ngx_http_upstream_module.html
 type Server struct {
 	Address     string `json:"address"`
-	Port        int    `json:"port"`
-	Weight      int    `json:"weight"`      // eg. weight=5， sets the weight of the server.
-	MaxConns    int    `json:"maxConns"`    // Default value is zero, meaning there is no limit.
-	MaxFails    int    `json:"maxFails"`    // By default, the number of unsuccessful attempts is set to 1
+	Port        string `json:"port"`
+	Weight      string `json:"weight"`      // eg. weight=5， sets the weight of the server.
+	MaxConns    string `json:"maxConns"`    // Default value is zero, meaning there is no limit.
+	MaxFails    string `json:"maxFails"`    // By default, the number of unsuccessful attempts is set to 1
 	FailTimeout string `json:"failTimeout"` // By default, the parameter is set to 10 seconds.
-	Backup      bool   `json:"backup"`
+	Backup      string `json:"backup"`
 	SlowStart   string `json:"slowStart"` // Default value is zero, i.e. slow start is disabled.
 }
 
@@ -45,15 +46,16 @@ func TestUpstreamsTemplate(t *testing.T) {
 	var out bytes.Buffer
 	data := Data{
 		Upstreams: []Upstream{{
-			Name:  "service1",
-			State: "1",
+			Name:      "service1",
+			State:     "1",
+			Keepalive: "32",
 			Servers: []Server{
 				{
 					Address: "127.0.0.1",
-					Port:    8001,
+					Port:    "8001",
 				}, {
 					Address: "127.0.0.1",
-					Port:    8002,
+					Port:    "8002",
 				},
 			},
 		}},
@@ -75,54 +77,57 @@ func TestUpstreamsTemplate(t *testing.T) {
 
 	s3 := Server{
 		Address:     "192.168.1.1",
-		Port:        80,
-		Weight:      10,
-		MaxConns:    10,
-		MaxFails:    10,
+		Port:        "80",
+		Weight:      "10",
+		MaxConns:    "10",
+		MaxFails:    "10",
 		FailTimeout: "10s",
-		Backup:      true,
+		Backup:      "yes",
 		SlowStart:   "30s",
 	}
 
 	data = Data{
 		Upstreams: []Upstream{
 			{
-				Name:  "service1",
-				State: "1",
+				Name:      "service1",
+				State:     "1",
+				Keepalive: "32",
 				Servers: []Server{
 					{
 						Address: "127.0.0.1",
-						Port:    8001,
+						Port:    "8001",
 					}, {
 						Address: "127.0.0.1",
-						Port:    8002,
+						Port:    "8002",
 					},
 				},
 			}, {
-				Name:  "service2",
-				State: "1",
+				Name:      "service2",
+				State:     "1",
+				Keepalive: "32",
 				Servers: []Server{
 					{
 						Address: "127.0.0.1",
-						Port:    8201,
+						Port:    "8201",
 					},
 					{
 						Address: "127.0.0.1",
-						Port:    8202,
+						Port:    "8202",
 					},
 					s3,
 				},
 			}, {
-				Name:  "service3",
-				State: "0",
+				Name:      "service3",
+				State:     "0",
+				Keepalive: "32",
 				Servers: []Server{
 					{
 						Address: "127.0.0.1",
-						Port:    9201,
+						Port:    "9201",
 					},
 					{
 						Address: "127.0.0.1",
-						Port:    9202,
+						Port:    "9202",
 					},
 					s3,
 				},

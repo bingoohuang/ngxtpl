@@ -2,80 +2,27 @@
 
 golang nginx template.
 
-build: `make install`
+1. build: `make install`
+1. create a demo config file `ngxtpl --demo`.
 
 ## redis
 
-1. create a demo config file `ngxtpl --demo`.
-1. edit the created `demo.hcl` config file.
+1. edit the created `demo.hcl` config file, see [demo redis confi](testdata/demo.hcl), [demo redis config for set_real_ip_from](testdata/demo_realIps.hcl)
 1. put some data into redis.
     - `redis-cli -x hset __gateway_redis__ upstreams  < testdata/upstreams.json`
     - `redis-cli -x set upstreams < testdata/upstreams.json` 
     - `redis-cli -x set realIps  < testdata/set_real_ip_from.json`
-1. run `ngxtpl -c demo.hcl`.
-1. multiple config file run `ngxtpl -c demo.hcl -c demo_realIps.hcl`
+1. run `ngxtpl -c demo.hcl`, or `ngxtpl -c demo.hcl -c demo_realIps.hcl`
 
 ## mysql
 
-TBC.
+1. start MySQL `docker run -d --name mysql -e MYSQL_USER=user -e MYSQL_DATABASE=mydb -e MYSQL_PASSWORD=pass -e MYSQL_ROOT_PASSWORD=root -p 33306:3306 mysql:5.7`
+1. prepare tables  `MYSQL_PWD=root mysql -h hostname -P 33306 -u user testdb < path/to/test.sql`
+1. prepare config file, see [demo mysql config](testdata/demo_mysql.hcl)
 
-```bash
-docker run -d --name mysql \
-    -e MYSQL_USER=user \
-    -e MYSQL_DATABASE=mydb \
-    -e MYSQL_PASSWORD=pass \
-    -e MYSQL_ROOT_PASSWORD=root \
-    -p 33306:3306 \
-    mysql:5.7
-```
+## resources
 
-```bash
-MYSQL_PWD=root mysql  -h 127.0.0.1 -P 33306 -u root
-```
-
-```sql
-GRANT ALL PRIVILEGES ON mydb.* TO 'user'@'%';
-```
-
-```bash
-MYSQL_PWD=pass mysql  -h 127.0.0.1 -P 33306 -u user -D mydb
-```
-
-```sql
-drop table if exists t_upstreams;
-
-create table t_upstreams (
-   id int auto_increment not null comment '自增ID',
-   name varchar(60) not null comment 'upstream名称',
-   keepalive int not null default 0 comment '连接池', 
-   ip_hash tinyint not null default 0 comment 'ip_hash',
-   resolver varchar(60)  null comment 'resolver',
-   primary key (id)
-)ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
-
-drop table if exists t_servers;
-create table t_servers(
-   id int auto_increment not null comment '自增ID。',
-   upstream_name varchar(60) not null comment 'upstream名称',
-   address varchar(60) not null comment '服务器地址。',
-   port int not null default 80 comment '端口号。',
-   weight int not null default 1 comment '权重。',
-   max_conns int not null default 0 comment '并发最大连接数。',
-   max_fails int not null default 1 comment '并发失败尝试次数。',
-   fail_timeout varchar(20) not null default '10s' comment '失败超时。',
-   backup tinyint not null default 0 comment '是否备份服务。',
-   down tinyint not null default 0 comment '状态: 0 上线 1 下线。',
-   slow_start varchar(20) not null default '0' comment '慢启动时间。',
-   primary key (id)
-)ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
-
-insert into t_server(address, port) values("192.168.1.1", "8001");
-insert into t_server(address, port) values("192.168.1.2", "8001");
-update t_server set down = 1 where id = 1;
-update t_server set down = 1 ;
-```
-
-查看系统端口监听
+### 查看系统端口监听
 
 ```bash
 ➜  lsof -i -n -P | grep LISTEN | grep 33306
@@ -93,7 +40,7 @@ com.docke 31232 bingoobjca   24u  IPv6 0x2fc7a88898c9320d      0t0  TCP [::1]:33
 1. [是什么让你的 nginx 服务退出这么慢？](https://zhuanlan.zhihu.com/p/34792840)
 
 
-Nginx 各种timeout：
+### Nginx 各种timeout：
 
 1. proxy_connect_timeout 500s; # 后端服务器连接的超时时间_发起握手等候响应超时时间
 1. proxy_read_timeout 500s; # 连接成功后_等候后端服务器响应时间_其实已经进入后端的排队之中等候处理（也可以说是后端服务器处理请求的时间）

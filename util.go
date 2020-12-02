@@ -2,6 +2,7 @@ package ngxtpl
 
 import (
 	"context"
+	"database/sql"
 	"fmt"
 	"io/ioutil"
 	"os"
@@ -101,4 +102,34 @@ func CreateDemoCfg(demoHclFile string) {
 	}
 
 	fmt.Printf("%s created\n", demoHclFile)
+}
+
+// QueryRows querys the database and returns a slice of map.
+func QueryRows(db *sql.DB, query string) ([]map[string]interface{}, error) {
+	rows, _ := db.Query(query) // Note: Ignoring errors for brevity
+	defer rows.Close()
+
+	cols, _ := rows.Columns()
+
+	results := make([]map[string]interface{}, 0)
+	for rows.Next() {
+		columns := make([]string, len(cols))
+		columnPointers := make([]interface{}, len(cols))
+		for i := range columns {
+			columnPointers[i] = &columns[i]
+		}
+
+		if err := rows.Scan(columnPointers...); err != nil {
+			return nil, err
+		}
+
+		m := make(map[string]interface{})
+		for i, colName := range cols {
+			m[colName] = columns[i]
+		}
+
+		results = append(results, m)
+	}
+
+	return results, nil
 }
