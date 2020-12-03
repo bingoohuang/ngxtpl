@@ -1,9 +1,7 @@
 package ngxtpl
 
 import (
-	"bytes"
 	"database/sql"
-	"html/template"
 	"strings"
 
 	"github.com/sirupsen/logrus"
@@ -73,22 +71,15 @@ func (t *Mysql) fulfil(db *sql.DB, m map[string]interface{}) map[string]interfac
 			continue
 		}
 
-		t, err := template.New("").Parse(plSQL)
+		query, err := TemplateEval(plSQL, m)
 		if err != nil {
-			logrus.Warnf("failed to parse sql template %s, error: %v", plSQL, err)
+			logrus.Warnf("failed to execute template %s, error: %v", plSQL, err)
 			continue
 		}
 
-		var b bytes.Buffer
-
-		if err := t.Execute(&b, m); err != nil {
-			logrus.Warnf("failed to execute sql template %s, error: %v", plSQL, err)
-			continue
-		}
-
-		sub, err := QueryRows(db, b.String())
+		sub, err := QueryRows(db, query)
 		if err != nil {
-			logrus.Warnf("failed to execute sql %s, error: %v", b.String(), err)
+			logrus.Warnf("failed to execute sql %s, error: %v", query, err)
 			continue
 		}
 
@@ -104,7 +95,7 @@ func parsePlaceholder(v interface{}) string {
 		return ""
 	}
 
-	if strings.HasPrefix(s, "{{") && strings.HasSuffix(s, "}}") {
+	if HasBrace(s, "{{", "}}") {
 		return strings.TrimSpace(s[2 : len(s)-2])
 	}
 

@@ -2,7 +2,6 @@ package ngxtpl
 
 import (
 	"context"
-	"encoding/json"
 	"strings"
 
 	"github.com/go-redis/redis/v8"
@@ -17,7 +16,8 @@ type Redis struct {
 	ServicesKey string `hcl:"servicesKey"`
 }
 
-func (r Redis) Read() (interface{}, error) {
+// Get gets the value of key from redis.
+func (r Redis) Get(key string) (string, error) {
 	rdb := redis.NewClient(&redis.Options{
 		Addr:     r.Addr,
 		Password: r.Password,
@@ -27,35 +27,24 @@ func (r Redis) Read() (interface{}, error) {
 
 	ctx := context.Background()
 
-	var (
-		v    string
-		data map[string]interface{}
-		err  error
-	)
-
 	const sep = " "
 
-	if strings.Contains(r.ServicesKey, sep) {
+	if strings.Contains(key, sep) {
 		// treat as a hash
-		p := strings.LastIndex(r.ServicesKey, sep)
-		hashKey := strings.TrimSpace(r.ServicesKey[:p])
-		field := strings.TrimSpace(r.ServicesKey[p+1:])
-
-		v, err = rdb.HGet(ctx, hashKey, field).Result()
-	} else {
-		v, err = rdb.Get(ctx, r.ServicesKey).Result()
+		hashKey, field := Split2(key, sep)
+		return rdb.HGet(ctx, hashKey, field).Result()
 	}
 
+	return rdb.Get(ctx, key).Result()
+}
+
+func (r Redis) Read() (interface{}, error) {
+	v, err := r.Get(r.ServicesKey)
 	if err != nil {
 		return nil, err
 	}
 
-	err = json.Unmarshal([]byte(v), &data)
-	if err != nil {
-		return nil, err
-	}
-
-	return data, nil
+	return JSONDecode(v)
 }
 
 // Parse parse the redis config.

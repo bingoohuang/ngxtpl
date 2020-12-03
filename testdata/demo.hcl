@@ -8,11 +8,13 @@ redis {
 }
 
 tpl {
-  dataSource = "redis"
+  dataSource = "http://127.0.0.1:5003/data"
+  #dataSource = "redis"
   # 不设置interval，将只会运行一次
   # 设置了interval，则会进入循环，每次间隔interval时间后，执行一次
   interval = "10s"
-  source = "testdata/upstreams.tpl"
+  tplSource = "http://127.0.0.1:5003/tpl"
+  #tplSource = "testdata/upstreams.tpl"
   destination = "testdata/upstreams.conf"
   perms = 0600
   command = "echo reloaded"

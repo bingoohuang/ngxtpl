@@ -7,6 +7,8 @@ golang nginx template.
 
 ![image](https://user-images.githubusercontent.com/1940588/100842805-57feb500-34b4-11eb-9edf-7b3fd6091178.png)
 
+![image](https://user-images.githubusercontent.com/1940588/100977065-68c62e00-357b-11eb-8183-6a65335740a3.png)
+
 ## redis
 
 1. edit the created `demo.hcl` config file, see [demo redis confi](testdata/demo.hcl), [demo redis config for set_real_ip_from](testdata/demo_realIps.hcl)

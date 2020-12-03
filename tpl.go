@@ -18,21 +18,31 @@ import (
 type Tpl struct {
 	DataSource  string `hcl:"dataSource"`
 	Interval    string `hcl:"interval"`
-	Source      string `hcl:"source"`
+	TplSource   string `hcl:"tplSource"`
 	Destination string `hcl:"destination"`
 	Perms       int    `hcl:"perms"`
 	Command     string `hcl:"command"`
 
 	interval time.Duration
-	source   *template.Template
 	tiker    *time.Ticker
 }
 
 // Execute executes the template.
-func (t *Tpl) Execute(data interface{}) error {
+func (t *Tpl) Execute(data interface{}, ds DataSource) error {
 	var out bytes.Buffer
 
-	if err := t.source.Execute(&out, data); err != nil {
+	sourceContent, err := t.parseSource(ds)
+	if err != nil {
+		return err
+	}
+
+	source, err := template.New("TplSource").Parse(sourceContent)
+	if err != nil {
+		return errors.Wrapf(ErrCfg, "TplSource is invalid. "+
+			"it should be a template file or direct template content string")
+	}
+
+	if err := source.Execute(&out, data); err != nil {
 		return err
 	}
 
@@ -58,12 +68,12 @@ func (t *Tpl) Execute(data interface{}) error {
 }
 
 // Parse parses and validates the template.
-func (t *Tpl) Parse() error {
+func (t *Tpl) Parse(ds DataSource) error {
 	if err := t.parseInterval(); err != nil {
 		return err
 	}
 
-	if err := t.parseSource(); err != nil {
+	if _, err := t.parseSource(ds); err != nil {
 		return err
 	}
 
@@ -95,29 +105,35 @@ func (t *Tpl) resetTicker() {
 	}
 }
 
-func (t *Tpl) parseSource() error {
-	if t.Source == "" {
-		return errors.Wrapf(ErrCfg, "source is empty")
+func (t *Tpl) parseSource(ds DataSource) (string, error) {
+	if t.TplSource == "" {
+		return "", errors.Wrapf(ErrCfg, "source is empty")
 	}
 
-	var v []byte
+	return loadSourceContent(t.TplSource, ds)
+}
 
-	if stat, err := os.Stat(t.Source); err == nil && !stat.IsDir() {
-		v, err = ReadFileE(t.Source)
-		if err != nil {
-			return err
+func loadSourceContent(source string, ds DataSource) (string, error) {
+	// 1. 尝试从文件读
+	if stat, err := os.Stat(source); err == nil && !stat.IsDir() {
+		return ReadFileStrE(source)
+	}
+
+	// 2. 尝试从datasource读
+	const dataSourcePrefix = "dataSource:"
+	if strings.HasPrefix(source, dataSourcePrefix) {
+		dataSourceKey := source[len(dataSourcePrefix):]
+		if kr, ok := ds.(KeyReader); ok {
+			return kr.Get(dataSourceKey)
 		}
-	} else {
-		v = []byte(t.Source)
 	}
 
-	var err error
-
-	if t.source, err = template.New("Source").Parse(string(v)); err != nil {
-		return errors.Wrapf(ErrCfg, "source is invalid. it should be a template file or direct template string")
+	// 3. 尝试从http读
+	if IsHTTPAddress(source) {
+		return HTTPGetStr(source)
 	}
 
-	return nil
+	return source, nil
 }
 
 func (t *Tpl) parseDestination() error {
@@ -127,7 +143,8 @@ func (t *Tpl) parseDestination() error {
 
 	dir := filepath.Dir(t.Destination)
 	if v, err := os.Stat(dir); err != nil {
-		return errors.Wrapf(ErrCfg, "Destination is invalid. it should be stdout of valid file. error: %v", err)
+		return errors.Wrapf(ErrCfg, "Destination is invalid. "+
+			"it should be stdout of valid file. error: %v", err)
 	} else if !v.IsDir() {
 		return errors.Wrapf(ErrCfg, "Destination's dir %s does not exist", dir)
 	}

@@ -1,14 +1,22 @@
 package ngxtpl
 
 import (
+	"bytes"
 	"context"
+	"crypto/tls"
 	"database/sql"
+	"encoding/json"
 	"fmt"
 	"io/ioutil"
+	"net/http"
 	"os"
 	"os/signal"
 	"strings"
 	"syscall"
+	"text/template"
+	"time"
+
+	"github.com/pkg/errors"
 
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/pflag"
@@ -52,6 +60,16 @@ func ReadFileE(filename string) ([]byte, error) {
 	}
 
 	return d, nil
+}
+
+// ReadFileStrE reads the file content of file with name filename.
+func ReadFileStrE(filename string) (string, error) {
+	d, err := ioutil.ReadFile(filename)
+	if err != nil {
+		return "", err
+	}
+
+	return string(d), nil
 }
 
 // SetupSingals setup the signal.
@@ -132,4 +150,95 @@ func QueryRows(db *sql.DB, query string) ([]map[string]interface{}, error) {
 	}
 
 	return results, nil
+}
+
+// IsHTTPAddress tests whether the string s starts with http:// or https://.
+func IsHTTPAddress(s string) bool {
+	return HasPrefix(s, "http://", "https://")
+}
+
+// HTTPGetStr execute HTTP GET request.
+func HTTPGetStr(addr string) (string, error) {
+	v, err := HTTPGet(addr)
+
+	return string(v), err
+}
+
+// HTTPGet execute HTTP GET request.
+func HTTPGet(addr string) ([]byte, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+
+	client := &http.Client{
+		Timeout: 10 * time.Second,
+		Transport: &http.Transport{
+			TLSClientConfig:   &tls.Config{InsecureSkipVerify: true},
+			DisableKeepAlives: true,
+		},
+	}
+
+	req, _ := http.NewRequestWithContext(ctx, "GET", addr, nil)
+	req.Close = true
+
+	resp, err := client.Do(req)
+	if err != nil {
+		return nil, err
+	}
+
+	defer resp.Body.Close()
+
+	if resp.StatusCode == http.StatusOK {
+		return ioutil.ReadAll(resp.Body)
+	}
+
+	return nil, errors.Wrapf(err, "status:%d", resp.StatusCode)
+}
+
+// HasPrefix tests whether the string s begins with any of prefix.
+func HasPrefix(s string, prefix ...string) bool {
+	for _, p := range prefix {
+		if strings.HasPrefix(s, p) {
+			return true
+		}
+	}
+
+	return false
+}
+
+// HasBrace tests whether the string s begins with head and ends with tail.
+func HasBrace(s string, head, tail string) bool {
+	return strings.HasPrefix(s, head) && strings.HasSuffix(s, tail)
+}
+
+// JSONDecode decodes JSON string v to map[string]interface.
+func JSONDecode(v string) (interface{}, error) {
+	var data map[string]interface{}
+
+	if err := json.Unmarshal([]byte(v), &data); err != nil {
+		return nil, err
+	}
+
+	return data, nil
+}
+
+// TemplateEval execute a template s with data.
+func TemplateEval(s string, data interface{}) (string, error) {
+	t, err := template.New("").Parse(s)
+	if err != nil {
+		return "", err
+	}
+
+	var b bytes.Buffer
+
+	if err := t.Execute(&b, data); err != nil {
+		return "", err
+	}
+
+	return b.String(), nil
+}
+
+// Split2 splits the s with sep and return the trimmed string pair.
+func Split2(s, sep string) (string, string) {
+	p := strings.LastIndex(s, sep)
+	return strings.TrimSpace(s[:p]), strings.TrimSpace(s[p+len(sep):])
 }

@@ -9,9 +9,28 @@ import (
 	"github.com/pkg/errors"
 )
 
-// DataSource defines the data source interface for reading the template data.
+// KeyReader read by key.
+type KeyReader interface {
+	Get(key string) (string, error)
+}
+
+// DataSource defines the data source interface for reading the data.
 type DataSource interface {
 	Read() (interface{}, error)
+}
+
+// HTTPSource defines the data source interface for reading the data from http.
+type HTTPSource struct {
+	Address string
+}
+
+func (h HTTPSource) Read() (interface{}, error) {
+	content, err := HTTPGetStr(h.Address)
+	if err != nil {
+		return nil, err
+	}
+
+	return JSONDecode(content)
 }
 
 // Cfg represents the root structure of the config.
@@ -29,23 +48,29 @@ func (c *Cfg) Parse() error {
 		return err
 	}
 
-	return c.Tpl.Parse()
+	return c.Tpl.Parse(c.dataSource)
 }
 
 // ErrCfg defines the error type of bad config.
-var ErrCfg = errors.New("Unknown dataSource(should be redis or mysql)")
+var ErrCfg = errors.New("Unknown dataSource(should be redis, mysql or http address)")
 
 func (c *Cfg) parseDataSource() (err error) {
-	switch c.Tpl.DataSource {
+	switch v := c.Tpl.DataSource; v {
 	case "redis":
 		c.dataSource, err = c.Redis.Parse()
 		return err
 	case "mysql":
 		c.dataSource, err = c.Mysql.Parse()
 		return err
+	default:
+		if IsHTTPAddress(v) {
+			c.dataSource, err = &HTTPSource{Address: v}, nil
+			return
+		}
 	}
 
-	return errors.Wrapf(ErrCfg, "Unknown dataSource %s, it should be redis or mysql", c.Tpl.DataSource)
+	return errors.Wrapf(ErrCfg,
+		"Unknown dataSource %s, it should be redis or mysql", c.Tpl.DataSource)
 }
 
 func (c *Cfg) tikerC() <-chan time.Time {
@@ -87,7 +112,7 @@ func (c Cfg) Run() {
 		return
 	}
 
-	if err := c.Tpl.Execute(m); err != nil {
+	if err := c.Tpl.Execute(m, c.dataSource); err != nil {
 		logrus.Warnf("failed to execute tpl: %v", err)
 	}
 }

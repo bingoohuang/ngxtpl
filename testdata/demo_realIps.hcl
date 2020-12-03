@@ -12,7 +12,7 @@ tpl {
   # 不设置interval，将只会运行一次
   # 设置了interval，则会进入循环，每次间隔interval时间后，执行一次
   interval = "10s"
-  source = "testdata/set_real_ip_from.tpl"
+  tplSource = "testdata/set_real_ip_from.tpl"
   destination = "testdata/set_real_ip_from.conf"
   perms = 0600
   command = "echo reloaded"

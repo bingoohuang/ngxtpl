@@ -35,7 +35,7 @@ func TestCfgParse(t *testing.T) {
 		Tpl: ngxtpl.Tpl{
 			DataSource:  "redis",
 			Interval:    "10s",
-			Source:      "/etc/nginx/conf.d/load-balancer.conf.tpl",
+			TplSource:   "/etc/nginx/conf.d/load-balancer.conf.tpl",
 			Destination: "/etc/nginx/conf.d/load-balancer.conf",
 			Perms:       0600,
 			Command:     "service nginx reload",

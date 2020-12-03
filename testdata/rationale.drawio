@@ -1,0 +1,80 @@
+<mxfile host="65bd71144e" modified="2020-12-03T02:59:20.533Z" agent="5.0 (Macintosh; Intel Mac OS X 10_16_0) AppleWebKit/537.36 (KHTML, like Gecko) Code/1.51.1 Chrome/83.0.4103.122 Electron/9.3.3 Safari/537.36" version="13.6.5" etag="DQnLflRt23pwS6FIXwIO">
+    <diagram id="62lzJzfx6cmnOtKG0HdY" name="Page-1">
+        <mxGraphModel dx="1091" dy="827" grid="0" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="827" pageHeight="1169" math="0" shadow="0">
+            <root>
+                <mxCell id="0"/>
+                <mxCell id="1" parent="0"/>
+                <mxCell id="5" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.5;exitY=0;exitDx=0;exitDy=0;fontSize=17;" edge="1" parent="1" source="2" target="4">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="2" value="JSON数据" style="rounded=1;whiteSpace=wrap;html=1;fontSize=17;" vertex="1" parent="1">
+                    <mxGeometry x="120" y="430" width="160" height="60" as="geometry"/>
+                </mxCell>
+                <mxCell id="6" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.5;exitY=0;exitDx=0;exitDy=0;fontSize=17;entryX=0.5;entryY=1;entryDx=0;entryDy=0;" edge="1" parent="1" source="3" target="4">
+                    <mxGeometry relative="1" as="geometry">
+                        <mxPoint x="317" y="490" as="targetPoint"/>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="3" value="GOLANG模板" style="rounded=1;whiteSpace=wrap;html=1;fontSize=17;" vertex="1" parent="1">
+                    <mxGeometry x="370" y="430" width="160" height="60" as="geometry"/>
+                </mxCell>
+                <mxCell id="12" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.5;exitY=0;exitDx=0;exitDy=0;fontFamily=Verdana;fontSize=10;entryX=0.5;entryY=1;entryDx=0;entryDy=0;" edge="1" parent="1" source="4" target="10">
+                    <mxGeometry relative="1" as="geometry">
+                        <mxPoint x="303" y="152" as="targetPoint"/>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="4" value="目标配置文件" style="rounded=1;whiteSpace=wrap;html=1;fontSize=17;" vertex="1" parent="1">
+                    <mxGeometry x="240" y="272" width="160" height="50" as="geometry"/>
+                </mxCell>
+                <mxCell id="7" value="+" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontSize=30;fontFamily=Verdana;" vertex="1" parent="1">
+                    <mxGeometry x="300" y="440" width="40" height="20" as="geometry"/>
+                </mxCell>
+                <mxCell id="9" value="ngxtpl 工作原理" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontFamily=Verdana;fontSize=30;" vertex="1" parent="1">
+                    <mxGeometry x="145" y="80" width="350" height="20" as="geometry"/>
+                </mxCell>
+                <mxCell id="10" value="&lt;font style=&quot;font-size: 17px&quot;&gt;执行命令，通知配置更新&lt;/font&gt;" style="html=1;whiteSpace=wrap;container=1;recursiveResize=0;collapsible=0;fontFamily=Verdana;fontSize=10;" vertex="1" parent="1">
+                    <mxGeometry x="198.5" y="192" width="243" height="30" as="geometry"/>
+                </mxCell>
+                <mxCell id="11" value="" style="triangle;html=1;whiteSpace=wrap;" vertex="1" parent="10">
+                    <mxGeometry x="6" width="20" height="30" as="geometry"/>
+                </mxCell>
+                <mxCell id="13" value="&lt;br style=&quot;font-size: 12px;&quot;&gt;MySQL" style="shape=cylinder2;whiteSpace=wrap;html=1;boundedLbl=1;backgroundOutline=1;size=10;fontFamily=Verdana;fontSize=12;" vertex="1" parent="1">
+                    <mxGeometry x="125" y="531" width="60" height="60" as="geometry"/>
+                </mxCell>
+                <mxCell id="15" value="&lt;br style=&quot;font-size: 12px;&quot;&gt;Redis" style="shape=cylinder2;whiteSpace=wrap;html=1;boundedLbl=1;backgroundOutline=1;size=10;fontFamily=Verdana;fontSize=12;" vertex="1" parent="1">
+                    <mxGeometry x="206" y="533" width="60" height="60" as="geometry"/>
+                </mxCell>
+                <mxCell id="16" value="&lt;br style=&quot;font-size: 12px;&quot;&gt;文件" style="shape=note;whiteSpace=wrap;html=1;backgroundOutline=1;darkOpacity=0.05;fontFamily=Verdana;fontSize=12;" vertex="1" parent="1">
+                    <mxGeometry x="374" y="512" width="60" height="70" as="geometry"/>
+                </mxCell>
+                <mxCell id="17" value="1. 每10s(可配置)合并一次&lt;br&gt;2. 当合并后的内容与当前目标配置文件不同时&lt;br&gt;2.1 写入目标配置&lt;br&gt;2.2 并且执行命令，通知配置更新" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontFamily=Verdana;fontSize=12;" vertex="1" parent="1">
+                    <mxGeometry x="460" y="302" width="280" height="20" as="geometry"/>
+                </mxCell>
+                <mxCell id="19" value="http://remote.server/json" style="html=1;strokeWidth=1;shadow=0;dashed=0;shape=mxgraph.ios7ui.url;fillColor=#e0e0e0;strokeColor=#c0c0c0;buttonText=;strokeColor2=#222222;fontColor=#222222;fontSize=13;spacingTop=2;align=left;" vertex="1" parent="1">
+                    <mxGeometry x="125" y="627" width="181" height="12.5" as="geometry"/>
+                </mxCell>
+                <mxCell id="20" value="http://remote.server/template" style="html=1;strokeWidth=1;shadow=0;dashed=0;shape=mxgraph.ios7ui.url;fillColor=#e0e0e0;strokeColor=#c0c0c0;buttonText=;strokeColor2=#222222;fontColor=#222222;fontSize=13;spacingTop=2;align=left;" vertex="1" parent="1">
+                    <mxGeometry x="370" y="625" width="207" height="12.5" as="geometry"/>
+                </mxCell>
+                <mxCell id="21" value="1" style="ellipse;whiteSpace=wrap;html=1;aspect=fixed;strokeWidth=2;fontFamily=Tahoma;spacingBottom=4;spacingRight=2;strokeColor=#d3d3d3;align=center;" vertex="1" parent="1">
+                    <mxGeometry x="120" y="518" width="20" height="20" as="geometry"/>
+                </mxCell>
+                <mxCell id="22" value="2" style="ellipse;whiteSpace=wrap;html=1;aspect=fixed;strokeWidth=2;fontFamily=Tahoma;spacingBottom=4;spacingRight=2;strokeColor=#d3d3d3;align=center;" vertex="1" parent="1">
+                    <mxGeometry x="206" y="520" width="20" height="20" as="geometry"/>
+                </mxCell>
+                <mxCell id="23" value="3" style="ellipse;whiteSpace=wrap;html=1;aspect=fixed;strokeWidth=2;fontFamily=Tahoma;spacingBottom=4;spacingRight=2;strokeColor=#d3d3d3;align=center;" vertex="1" parent="1">
+                    <mxGeometry x="120" y="607" width="20" height="20" as="geometry"/>
+                </mxCell>
+                <mxCell id="24" value="1" style="ellipse;whiteSpace=wrap;html=1;aspect=fixed;strokeWidth=2;fontFamily=Tahoma;spacingBottom=4;spacingRight=2;strokeColor=#d3d3d3;align=center;" vertex="1" parent="1">
+                    <mxGeometry x="359" y="518" width="20" height="20" as="geometry"/>
+                </mxCell>
+                <mxCell id="25" value="2" style="ellipse;whiteSpace=wrap;html=1;aspect=fixed;strokeWidth=2;fontFamily=Tahoma;spacingBottom=4;spacingRight=2;strokeColor=#d3d3d3;align=center;" vertex="1" parent="1">
+                    <mxGeometry x="362" y="602" width="20" height="20" as="geometry"/>
+                </mxCell>
+                <mxCell id="28" value="dataSource" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontFamily=Verdana;fontSize=13;" vertex="1" parent="1">
+                    <mxGeometry x="180" y="492" width="40" height="20" as="geometry"/>
+                </mxCell>
+            </root>
+        </mxGraphModel>
+    </diagram>
+</mxfile>

@@ -22,7 +22,7 @@ redis {
 tpl {
   dataSource = "redis"
   interval = "10s"
-  source = "/etc/nginx/conf.d/load-balancer.conf.tpl"
+  tplSource = "/etc/nginx/conf.d/load-balancer.conf.tpl"
   destination = "/etc/nginx/conf.d/load-balancer.conf"
   perms = 0600
   command = "service nginx reload"
