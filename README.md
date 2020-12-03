@@ -4,6 +4,7 @@ golang nginx template.
 
 1. build: `make install`
 1. create a demo config file `ngxtpl --demo`.
+1. for http get/post mocking `go get github.com/bingoohuang/httplive/...`, `httplive -d testdata/httplive.db`
 
 ![image](https://user-images.githubusercontent.com/1940588/100842805-57feb500-34b4-11eb-9edf-7b3fd6091178.png)
 
