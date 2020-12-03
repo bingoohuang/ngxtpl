@@ -7,6 +7,7 @@ import (
 	"database/sql"
 	"encoding/json"
 	"fmt"
+	"io"
 	"io/ioutil"
 	"net/http"
 	"os"
@@ -164,8 +165,18 @@ func HTTPGetStr(addr string) (string, error) {
 	return string(v), err
 }
 
+// HTTPPost execute HTTP POST request.
+func HTTPPost(addr string, body []byte) ([]byte, error) {
+	return HTTPInvoke(http.MethodPost, addr, body)
+}
+
 // HTTPGet execute HTTP GET request.
 func HTTPGet(addr string) ([]byte, error) {
+	return HTTPInvoke(http.MethodGet, addr, nil)
+}
+
+// HTTPInvoke execute HTTP method request.
+func HTTPInvoke(method, addr string, body []byte) ([]byte, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
@@ -177,7 +188,13 @@ func HTTPGet(addr string) ([]byte, error) {
 		},
 	}
 
-	req, _ := http.NewRequestWithContext(ctx, "GET", addr, nil)
+	var r io.Reader
+
+	if len(body) > 0 {
+		r = bytes.NewReader(body)
+	}
+
+	req, _ := http.NewRequestWithContext(ctx, method, addr, r)
 	req.Close = true
 
 	resp, err := client.Do(req)
@@ -187,7 +204,7 @@ func HTTPGet(addr string) ([]byte, error) {
 
 	defer resp.Body.Close()
 
-	if resp.StatusCode == http.StatusOK {
+	if resp.StatusCode >= 200 && resp.StatusCode < 300 {
 		return ioutil.ReadAll(resp.Body)
 	}
 

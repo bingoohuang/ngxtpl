@@ -133,6 +133,7 @@ func loadSourceContent(source string, ds DataSource) (string, error) {
 		return HTTPGetStr(source)
 	}
 
+	// 4. 直接当做模板内容使用
 	return source, nil
 }
 
@@ -141,19 +142,22 @@ func (t *Tpl) parseDestination() error {
 		return nil
 	}
 
-	dir := filepath.Dir(t.Destination)
-	if v, err := os.Stat(dir); err != nil {
-		return errors.Wrapf(ErrCfg, "Destination is invalid. "+
-			"it should be stdout of valid file. error: %v", err)
-	} else if !v.IsDir() {
-		return errors.Wrapf(ErrCfg, "Destination's dir %s does not exist", dir)
-	}
-
 	if t.Perms == 0 {
 		t.Perms = 0644
 	}
 
-	return nil
+	dir := filepath.Dir(t.Destination)
+	_, err := os.Stat(dir)
+	if err == nil {
+		return nil
+	}
+
+	if IsHTTPAddress(t.Destination) {
+		return nil
+	}
+
+	return errors.Wrapf(ErrCfg, "Destination is invalid. "+
+		"it should be valid file or http addr. error: %v", err)
 }
 
 func (t *Tpl) readDestination() ([]byte, error) {
@@ -173,6 +177,16 @@ func (t *Tpl) readDestination() ([]byte, error) {
 
 func (t *Tpl) writeDestination(content []byte) error {
 	if t.Destination == "" {
+		return nil
+	}
+
+	if IsHTTPAddress(t.Destination) {
+		resp, err := HTTPPost(t.Destination, content)
+		if err != nil {
+			return err
+		}
+
+		logrus.Infof("POST %s response %s", t.Destination, string(resp))
 		return nil
 	}
 
