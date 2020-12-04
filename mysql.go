@@ -49,8 +49,8 @@ func (t *Mysql) Read() (interface{}, error) {
 		return nil, err
 	}
 
-	for i, m := range results {
-		results[i] = t.fulfil(db, m)
+	for _, m := range results {
+		t.fulfil(db, m)
 	}
 
 	out := make(map[string]interface{})
@@ -59,21 +59,16 @@ func (t *Mysql) Read() (interface{}, error) {
 	return out, nil
 }
 
-func (t *Mysql) fulfil(db *sql.DB, m map[string]interface{}) map[string]interface{} {
+func (t *Mysql) fulfil(db *sql.DB, m map[string]interface{}) {
 	for k, v := range m {
-		placeholderKey := parsePlaceholder(v)
-		if placeholderKey == "" {
-			continue
-		}
-
-		plSQL, ok := t.Sqls[placeholderKey]
+		queryTemplate, ok := t.Sqls[parsePlaceholder(v)]
 		if !ok {
 			continue
 		}
 
-		query, err := TemplateEval(plSQL, m)
+		query, err := TemplateEval(queryTemplate, m)
 		if err != nil {
-			logrus.Warnf("failed to execute template %s, error: %v", plSQL, err)
+			logrus.Warnf("failed to execute template %s, error: %v", queryTemplate, err)
 			continue
 		}
 
@@ -85,8 +80,6 @@ func (t *Mysql) fulfil(db *sql.DB, m map[string]interface{}) map[string]interfac
 
 		m[k] = sub
 	}
-
-	return m
 }
 
 func parsePlaceholder(v interface{}) string {

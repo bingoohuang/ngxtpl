@@ -122,10 +122,9 @@ type Cfgs []Cfg
 
 // Run runs the configs.
 func (c Cfgs) Run() {
+	singalCtx := SetupSingals()
 	agg := make(chan int)
 	aggSize := 0
-
-	singalCtx := SetupSingals()
 
 	for i, cfg := range c {
 		if cfg.Tpl.interval == 0 {

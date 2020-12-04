@@ -35,6 +35,33 @@ type Server struct {
 	SlowStart   string `json:"slowStart"` // Default value is zero, i.e. slow start is disabled.
 }
 
+func TestMapArg(t *testing.T) {
+	m := make(map[string]string)
+
+	fmt.Println(m) // map[]
+
+	f := func(a map[string]string) {
+		a["address"] = "zuoan"
+	}
+
+	f(m)
+
+	fmt.Println(m) // map[address:zuoan]
+
+	mm := []map[string]string{
+		{"name": "bingoo"},
+		{"name": "huang"},
+	}
+
+	fmt.Println(mm) // [map[name:bingoo] map[name:huang]]
+
+	for _, i := range mm {
+		f(i)
+	}
+
+	fmt.Println(mm) // [map[address:zuoan name:bingoo] map[address:zuoan name:huang]]
+}
+
 func TestUpstreamsTemplate(t *testing.T) {
 	tmpl := template.New("upstreams")
 	tmplText, err := ioutil.ReadFile("testdata/upstreams.tpl")
