@@ -15,8 +15,8 @@ tpl {
   interval = "10s"
   tplSource = "http://127.0.0.1:5003/tpl"
   #tplSource = "testdata/upstreams.tpl"
-  destination = "testdata/upstreams.conf"
-  #destination = "http://127.0.0.1:5003/post"
+  #destination = "testdata/upstreams.conf"
+  destination = "http://127.0.0.1:5003/post"
   perms = 0600
   command = "echo reloaded"
 }

@@ -197,6 +197,15 @@ func HTTPInvoke(method, addr string, body []byte) ([]byte, error) {
 	req, _ := http.NewRequestWithContext(ctx, method, addr, r)
 	req.Close = true
 
+	if r != nil {
+		contextType := "text/plain; charset=utf-8"
+		if IsJSONBytes(body) {
+			contextType = "application/json; charset=utf-8"
+		}
+
+		req.Header.Set("Content-Type", contextType)
+	}
+
 	resp, err := client.Do(req)
 	if err != nil {
 		return nil, err
@@ -209,6 +218,16 @@ func HTTPInvoke(method, addr string, body []byte) ([]byte, error) {
 	}
 
 	return nil, errors.Wrapf(err, "status:%d", resp.StatusCode)
+}
+
+// IsJSONBytes tests bytes b is in JSON format.
+func IsJSONBytes(b []byte) bool {
+	if len(b) == 0 {
+		return false
+	}
+
+	var m interface{}
+	return json.Unmarshal(b, &m) == nil
 }
 
 // HasPrefix tests whether the string s begins with any of prefix.
