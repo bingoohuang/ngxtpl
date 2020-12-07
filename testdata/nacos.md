@@ -20,9 +20,17 @@
     - [json url encode](https://onlinejsontools.com/url-encode-json)
     - 配置公共参数 `curl -X POST "$NACOS_SR/cs/configs?tenant=$NACOS_NS&dataId=demogo&group=upstreams&content=%7B%22keepalive%22%3A13%7D&type=JSON"`
     - 查看公共参数 `curl -X GET  "$NACOS_SR/cs/configs?tenant=$NACOS_NS&dataId=demogo&group=upstreams"`
-    - [nacos管理界面截图](testdata/snapshots)
 1. 问题
     - [code:503,msg:server is DOWN now, please try again later!](https://github.com/alibaba/nacos/issues/4210), 删除`{nacos.home}/nacos/data/protocol`文件夹后重新启动。
 1. reference
     - [nacos-sdk-go](https://github.com/nacos-group/nacos-sdk-go)
     - [nacos open-api](https://nacos.io/zh-cn/docs/open-api.html)
+   
+## nacos管理界面截图
+
+![image](snapshots/nacos-namespace.png)
+![image](snapshots/nacos-service-list.png)
+![image](snapshots/nacos-service-detail.png)
+![image](snapshots/nacos-service-detail2.png)
+![image](snapshots/nacos-upstreams-config.png)
+![image](snapshots/nacos-upstreams-config-edit.png)
