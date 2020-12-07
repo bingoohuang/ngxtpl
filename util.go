@@ -12,6 +12,7 @@ import (
 	"net/http"
 	"os"
 	"os/signal"
+	"strconv"
 	"strings"
 	"syscall"
 	"text/template"
@@ -124,7 +125,7 @@ func CreateDemoCfg(demoHclFile string) {
 }
 
 // QueryRows querys the database and returns a slice of map.
-func QueryRows(db *sql.DB, query string) ([]map[string]interface{}, error) {
+func QueryRows(db *sql.DB, query string, maxRows int) ([]map[string]interface{}, []string, error) {
 	rows, _ := db.Query(query) // Note: Ignoring errors for brevity
 	defer rows.Close()
 
@@ -139,7 +140,7 @@ func QueryRows(db *sql.DB, query string) ([]map[string]interface{}, error) {
 		}
 
 		if err := rows.Scan(columnPointers...); err != nil {
-			return nil, err
+			return nil, cols, err
 		}
 
 		m := make(map[string]interface{})
@@ -148,9 +149,13 @@ func QueryRows(db *sql.DB, query string) ([]map[string]interface{}, error) {
 		}
 
 		results = append(results, m)
+
+		if maxRows > 0 && len(results) >= maxRows {
+			break
+		}
 	}
 
-	return results, nil
+	return results, cols, nil
 }
 
 // IsHTTPAddress tests whether the string s starts with http:// or https://.
@@ -277,4 +282,16 @@ func TemplateEval(s string, data interface{}) (string, error) {
 func Split2(s, sep string) (string, string) {
 	p := strings.LastIndex(s, sep)
 	return strings.TrimSpace(s[:p]), strings.TrimSpace(s[p+len(sep):])
+}
+
+// FormatFloat format float with specified precision.
+func FormatFloat(num float64, precision int) string {
+	if precision == 0 {
+		return fmt.Sprintf("%d", int(num))
+	}
+
+	zero, dot := "0", "."
+	str := fmt.Sprintf("%."+strconv.Itoa(precision)+"f", num)
+
+	return strings.TrimRight(strings.TrimRight(str, zero), dot)
 }

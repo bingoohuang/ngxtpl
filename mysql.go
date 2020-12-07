@@ -17,6 +17,7 @@ type Mysql struct {
 	DataKey        string            `hcl:"dataKey"`
 	DataSQL        string            `hcl:"dataSql"`
 	Sqls           map[string]string `hcl:"sqls"`
+	KVSql          string            `hcl:"kvSql"`
 }
 
 // Parse parses the mysql config.
@@ -36,7 +37,33 @@ func (t *Mysql) Parse() (DataSource, error) {
 	return t, nil
 }
 
-func (t *Mysql) Read() (interface{}, error) {
+// Get gets the value of key from mysql.
+func (t Mysql) Get(key string) (string, error) {
+	if t.KVSql == "" {
+		return "", errors.Wrapf(ErrCfg, "kvSql is not set")
+	}
+
+	db, err := sql.Open("mysql", t.DataSourceName)
+	if err != nil {
+		return "", err
+	}
+
+	defer db.Close()
+
+	query := strings.ReplaceAll(t.KVSql, "{{key}}", key)
+	results, cols, err := QueryRows(db, query, 1)
+	if err != nil {
+		return "", err
+	}
+
+	if len(results) == 0 {
+		return "", errors.Wrapf(ErrCfg, "no value found")
+	}
+
+	return results[0][cols[0]].(string), nil
+}
+
+func (t Mysql) Read() (interface{}, error) {
 	db, err := sql.Open("mysql", t.DataSourceName)
 	if err != nil {
 		return nil, err
@@ -44,7 +71,7 @@ func (t *Mysql) Read() (interface{}, error) {
 
 	defer db.Close()
 
-	results, err := QueryRows(db, t.DataSQL)
+	results, _, err := QueryRows(db, t.DataSQL, 0)
 	if err != nil {
 		return nil, err
 	}
@@ -59,7 +86,7 @@ func (t *Mysql) Read() (interface{}, error) {
 	return out, nil
 }
 
-func (t *Mysql) fulfil(db *sql.DB, m map[string]interface{}) {
+func (t Mysql) fulfil(db *sql.DB, m map[string]interface{}) {
 	for k, v := range m {
 		queryTemplate, ok := t.Sqls[parsePlaceholder(v)]
 		if !ok {
@@ -72,7 +99,7 @@ func (t *Mysql) fulfil(db *sql.DB, m map[string]interface{}) {
 			continue
 		}
 
-		sub, err := QueryRows(db, query)
+		sub, _, err := QueryRows(db, query, 0)
 		if err != nil {
 			logrus.Warnf("failed to execute sql %s, error: %v", query, err)
 			continue

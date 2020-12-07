@@ -38,7 +38,7 @@ type Server struct {
 func TestMapArg(t *testing.T) {
 	m := make(map[string]string)
 
-	fmt.Println(m) // map[]
+	assert.Equal(t, map[string]string{}, m)
 
 	f := func(a map[string]string) {
 		a["address"] = "zuoan"
@@ -46,20 +46,26 @@ func TestMapArg(t *testing.T) {
 
 	f(m)
 
-	fmt.Println(m) // map[address:zuoan]
+	assert.Equal(t, map[string]string{"address": "zuoan"}, m)
 
 	mm := []map[string]string{
 		{"name": "bingoo"},
 		{"name": "huang"},
 	}
 
-	fmt.Println(mm) // [map[name:bingoo] map[name:huang]]
+	assert.Equal(t, []map[string]string{
+		{"name": "bingoo"},
+		{"name": "huang"},
+	}, mm)
 
 	for _, i := range mm {
 		f(i)
 	}
 
-	fmt.Println(mm) // [map[address:zuoan name:bingoo] map[address:zuoan name:huang]]
+	assert.Equal(t, []map[string]string{
+		{"address": "zuoan", "name": "bingoo"},
+		{"address": "zuoan", "name": "huang"},
+	}, mm)
 }
 
 func TestUpstreamsTemplate(t *testing.T) {

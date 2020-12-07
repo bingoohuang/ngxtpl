@@ -23,7 +23,7 @@ func main() {
 	}
 
 	if *version {
-		fmt.Println("v1.0.0 released at 2020-12-02 15:11:01")
+		fmt.Println("v1.0.1 released at 2020-12-07 16:03:12")
 		os.Exit(0)
 	}
 

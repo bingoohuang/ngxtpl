@@ -1,8 +1,6 @@
 package ngxtpl_test
 
 import (
-	"io/ioutil"
-	"path/filepath"
 	"testing"
 
 	"github.com/bingoohuang/ngxtpl"
@@ -11,10 +9,53 @@ import (
 )
 
 func TestCfgParse(t *testing.T) {
+	s, err := ngxtpl.ReadFileE("assets/cfg.hcl")
+	assert.Nil(t, err)
+
 	var cfg ngxtpl.Cfg
 
-	assert.Nil(t, hcl.Decode(&cfg, testReadFile(t, "cfg.hcl")))
+	assert.Nil(t, hcl.Unmarshal(s, &cfg))
 	assert.Equal(t, ngxtpl.Cfg{
+		Nacos: ngxtpl.Nacos{
+			ClientConfig: ngxtpl.ClientConfig{
+				TimeoutMs:            5000,
+				BeatInterval:         0,
+				NamespaceID:          "f3c0ab89-31bb-4414-a495-146941316751",
+				Endpoint:             "",
+				RegionID:             "",
+				AccessKey:            "",
+				SecretKey:            "",
+				OpenKMS:              false,
+				CacheDir:             "/tmp/nacos/cache",
+				UpdateThreadNum:      0,
+				NotLoadCacheAtStart:  true,
+				UpdateCacheWhenEmpty: false,
+				Username:             "",
+				Password:             "",
+				LogDir:               "/tmp/nacos/log",
+				RotateTime:           "1h",
+				MaxAge:               3,
+				LogLevel:             "debug",
+			},
+			ServerConfigs: []ngxtpl.ServerConfig{
+				{
+					Scheme:      "http",
+					ContextPath: "/nacos",
+					IPAddr:      "127.0.0.1",
+					Port:        8848,
+				}, {
+					Scheme:      "http",
+					ContextPath: "/nacos",
+					IPAddr:      "127.0.0.1",
+					Port:        8849,
+				},
+			},
+			ServiceParam: ngxtpl.ServiceParam{
+				Clusters:    []string{"clustera"},
+				ServiceName: "demogo",
+				GroupName:   "groupa",
+			},
+		},
 		Mysql: ngxtpl.Mysql{
 			DataSourceName: "user:pass@tcp(127.0.0.1:3306)/db1?charset=utf8",
 			DataKey:        "upstreams",
@@ -25,6 +66,7 @@ func TestCfgParse(t *testing.T) {
 					"fail_timeout failTimeout,backup,down,slow_start slowStart " +
 					"from t_servers where upstream_name='{{.name}}' and state='1'",
 			},
+			KVSql: "select value from t_config where key = '{{key}}'",
 		},
 		Redis: ngxtpl.Redis{
 			Addr:        "localhost:6379",
@@ -41,13 +83,4 @@ func TestCfgParse(t *testing.T) {
 			Command:     "service nginx reload",
 		},
 	}, cfg)
-}
-
-func testReadFile(t *testing.T, n string) string {
-	d, err := ioutil.ReadFile(filepath.Join("assets", n))
-	if err != nil {
-		t.Fatalf("err: %s", err)
-	}
-
-	return string(d)
 }

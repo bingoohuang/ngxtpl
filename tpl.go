@@ -2,9 +2,11 @@ package ngxtpl
 
 import (
 	"bytes"
+	"fmt"
 	"io/ioutil"
 	"os"
 	"path/filepath"
+	"strconv"
 	"strings"
 	"text/template"
 	"time"
@@ -214,4 +216,37 @@ func (t *Tpl) executeCommand() error {
 	}
 
 	return nil
+}
+
+//  MapInt returns the int value associated with given key in the map.
+func MapInt(m map[string]interface{}, key string, defaultValue int) int {
+	if len(m) == 0 {
+		return defaultValue
+	}
+
+	v, ok := m[key]
+	if ok && v != "" {
+		f, err := strconv.ParseFloat(fmt.Sprintf("%v", v), 64)
+		if err != nil {
+			return defaultValue
+		}
+
+		return int(f)
+	}
+
+	return defaultValue
+}
+
+//  MapStr returns the string value associated with given key in the map.
+func MapStr(m map[string]interface{}, key, defaultValue string) string {
+	if len(m) == 0 {
+		return defaultValue
+	}
+
+	v, ok := m[key]
+	if ok && v != "" {
+		return fmt.Sprintf("%v", v)
+	}
+
+	return defaultValue
 }

@@ -18,11 +18,7 @@ type Redis struct {
 
 // Get gets the value of key from redis.
 func (r Redis) Get(key string) (string, error) {
-	rdb := redis.NewClient(&redis.Options{
-		Addr:     r.Addr,
-		Password: r.Password,
-		DB:       r.Db,
-	})
+	rdb := redis.NewClient(&redis.Options{Addr: r.Addr, Password: r.Password, DB: r.Db})
 	defer rdb.Close()
 
 	ctx := context.Background()

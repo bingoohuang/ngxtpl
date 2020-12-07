@@ -38,6 +38,7 @@ type Cfg struct {
 	Tpl   Tpl   `hcl:"tpl"`
 	Redis Redis `hcl:"redis"`
 	Mysql Mysql `hcl:"mysql"`
+	Nacos Nacos `hcl:"nacos"`
 
 	dataSource DataSource
 }
@@ -61,6 +62,9 @@ func (c *Cfg) parseDataSource() (err error) {
 		return err
 	case "mysql":
 		c.dataSource, err = c.Mysql.Parse()
+		return err
+	case "nacos":
+		c.dataSource, err = c.Nacos.Parse()
 		return err
 	default:
 		if IsHTTPAddress(v) {
@@ -86,17 +90,13 @@ func DecodeCfgFiles(cfgFiles []string) (cfgs Cfgs) {
 	cfgs = make([]Cfg, len(cfgFiles))
 
 	for i, cfgFile := range cfgFiles {
-		var cfg Cfg
-
-		if err := hcl.Decode(&cfg, string(ReadFile(cfgFile))); err != nil {
+		if err := hcl.Unmarshal(ReadFile(cfgFile), &cfgs[i]); err != nil {
 			panic(err)
 		}
 
-		if err := cfg.Parse(); err != nil {
+		if err := cfgs[i].Parse(); err != nil {
 			panic(err)
 		}
-
-		cfgs[i] = cfg
 	}
 
 	return
