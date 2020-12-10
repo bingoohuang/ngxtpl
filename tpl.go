@@ -30,7 +30,7 @@ type Tpl struct {
 }
 
 // Execute executes the template.
-func (t *Tpl) Execute(data interface{}, ds DataSource) error {
+func (t *Tpl) Execute(data interface{}, ds DataSource, cfgName string) error {
 	var out bytes.Buffer
 
 	sourceContent, err := t.parseSource(ds)
@@ -55,6 +55,7 @@ func (t *Tpl) Execute(data interface{}, ds DataSource) error {
 	}
 
 	if bytes.Equal(newContent, oldContent) {
+		logrus.Infof("nothing changed for config file: %s", cfgName)
 		return nil
 	}
 
@@ -143,10 +144,7 @@ func (t *Tpl) parseDestination() error {
 	if t.Destination == "" {
 		return nil
 	}
-
-	if t.Perms == 0 {
-		t.Perms = 0644
-	}
+	t.Perms = ZeroTo(t.Perms, 0644)
 
 	dir := filepath.Dir(t.Destination)
 	_, err := os.Stat(dir)
@@ -224,17 +222,12 @@ func MapInt(m map[string]interface{}, key string, defaultValue int) int {
 		return defaultValue
 	}
 
-	v, ok := m[key]
-	if ok && v != "" {
-		f, err := strconv.ParseFloat(fmt.Sprintf("%v", v), 64)
-		if err != nil {
-			return defaultValue
-		}
-
-		return int(f)
+	f, err := strconv.ParseFloat(fmt.Sprintf("%v", m[key]), 64)
+	if err != nil {
+		return defaultValue
 	}
 
-	return defaultValue
+	return int(f)
 }
 
 //  MapStr returns the string value associated with given key in the map.
@@ -244,7 +237,7 @@ func MapStr(m map[string]interface{}, key, defaultValue string) string {
 	}
 
 	v, ok := m[key]
-	if ok && v != "" {
+	if ok {
 		return fmt.Sprintf("%v", v)
 	}
 

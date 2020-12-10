@@ -130,16 +130,15 @@ func QueryRows(db *sql.DB, query string, maxRows int) ([]map[string]interface{},
 	defer rows.Close()
 
 	cols, _ := rows.Columns()
-
 	results := make([]map[string]interface{}, 0)
-	for rows.Next() {
+	for row := 0; rows.Next() && (maxRows <= 0 || row < maxRows); row++ {
 		columns := make([]string, len(cols))
-		columnPointers := make([]interface{}, len(cols))
+		pointers := make([]interface{}, len(cols))
 		for i := range columns {
-			columnPointers[i] = &columns[i]
+			pointers[i] = &columns[i]
 		}
 
-		if err := rows.Scan(columnPointers...); err != nil {
+		if err := rows.Scan(pointers...); err != nil {
 			return nil, cols, err
 		}
 
@@ -149,10 +148,6 @@ func QueryRows(db *sql.DB, query string, maxRows int) ([]map[string]interface{},
 		}
 
 		results = append(results, m)
-
-		if maxRows > 0 && len(results) >= maxRows {
-			break
-		}
 	}
 
 	return results, cols, nil
@@ -203,12 +198,8 @@ func HTTPInvoke(method, addr string, body []byte) ([]byte, error) {
 	req.Close = true
 
 	if r != nil {
-		contextType := "text/plain; charset=utf-8"
-		if IsJSONBytes(body) {
-			contextType = "application/json; charset=utf-8"
-		}
-
-		req.Header.Set("Content-Type", contextType)
+		req.Header.Set("Content-Type", If(IsJSONBytes(body),
+			"application/json; charset=utf-8", "text/plain; charset=utf-8"))
 	}
 
 	resp, err := client.Do(req)
@@ -294,4 +285,22 @@ func FormatFloat(num float64, precision int) string {
 	str := fmt.Sprintf("%."+strconv.Itoa(precision)+"f", num)
 
 	return strings.TrimRight(strings.TrimRight(str, zero), dot)
+}
+
+// ZeroTo return a == 0 ? b : a.
+func ZeroTo(a, b int) int {
+	if a == 0 {
+		return b
+	}
+
+	return a
+}
+
+// If tests condition to return a or b.
+func If(condition bool, a, b string) string {
+	if condition {
+		return a
+	}
+
+	return b
 }

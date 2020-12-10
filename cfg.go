@@ -1,8 +1,6 @@
 package ngxtpl
 
 import (
-	"time"
-
 	"github.com/sirupsen/logrus"
 
 	"github.com/hashicorp/hcl"
@@ -41,6 +39,7 @@ type Cfg struct {
 	Nacos Nacos `hcl:"nacos"`
 
 	dataSource DataSource
+	name       string
 }
 
 // Parse parses the config.
@@ -77,14 +76,6 @@ func (c *Cfg) parseDataSource() (err error) {
 		"Unknown dataSource %s, it should be redis or mysql", c.Tpl.DataSource)
 }
 
-func (c *Cfg) tikerC() <-chan time.Time {
-	if c.Tpl.tiker != nil {
-		return c.Tpl.tiker.C
-	}
-
-	return nil
-}
-
 // DecodeCfgFiles decodes the config files to Cfg structs.
 func DecodeCfgFiles(cfgFiles []string) (cfgs Cfgs) {
 	cfgs = make([]Cfg, len(cfgFiles))
@@ -93,6 +84,8 @@ func DecodeCfgFiles(cfgFiles []string) (cfgs Cfgs) {
 		if err := hcl.Unmarshal(ReadFile(cfgFile), &cfgs[i]); err != nil {
 			panic(err)
 		}
+
+		cfgs[i].name = cfgFile
 
 		if err := cfgs[i].Parse(); err != nil {
 			panic(err)
@@ -106,13 +99,15 @@ func DecodeCfgFiles(cfgFiles []string) (cfgs Cfgs) {
 func (c Cfg) Run() {
 	defer c.Tpl.resetTicker()
 
+	logrus.Infof("Start to run config file %s", c.name)
+
 	m, err := c.dataSource.Read()
 	if err != nil {
 		logrus.Warnf("failed to read template data: %v", err)
 		return
 	}
 
-	if err := c.Tpl.Execute(m, c.dataSource); err != nil {
+	if err := c.Tpl.Execute(m, c.dataSource, c.name); err != nil {
 		logrus.Warnf("failed to execute tpl: %v", err)
 	}
 }
@@ -122,36 +117,38 @@ type Cfgs []Cfg
 
 // Run runs the configs.
 func (c Cfgs) Run() {
-	singalCtx := SetupSingals()
+	loopCfgs := make(Cfgs, 0, len(c))
+	for _, cfg := range c {
+		cfg.Run()
+
+		if cfg.Tpl.interval > 0 {
+			loopCfgs = append(loopCfgs, cfg)
+		}
+	}
+
+	if len(loopCfgs) == 0 {
+		logrus.Infof("finished")
+		return
+	}
+
+	loopCfgs.loopRun()
+}
+
+func (c Cfgs) loopRun() {
 	agg := make(chan int)
-	aggSize := 0
+	singalCtx := SetupSingals()
 
 	for i, cfg := range c {
-		if cfg.Tpl.interval == 0 {
-			continue
-		}
-
-		go func(c chan int, i int) {
+		go func(c chan int, i int, cfg Cfg) {
 			for {
 				select {
 				case <-singalCtx.Done():
 					return
-				case <-cfg.tikerC():
-					agg <- i
+				case <-cfg.Tpl.tiker.C:
+					c <- i
 				}
 			}
-		}(agg, i)
-
-		aggSize++
-	}
-
-	for _, cfg := range c {
-		cfg.Run()
-	}
-
-	if aggSize == 0 {
-		logrus.Infof("finished")
-		return
+		}(agg, i, cfg)
 	}
 
 	for {
@@ -160,8 +157,7 @@ func (c Cfgs) Run() {
 			logrus.Info("exit by signal")
 			return
 		case i := <-agg:
-			cfg := c[i]
-			cfg.Run()
+			c[i].Run()
 		}
 	}
 }
