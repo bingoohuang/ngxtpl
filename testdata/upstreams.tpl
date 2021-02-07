@@ -1,7 +1,7 @@
 {{- /* Refer https://danielparker.me/nginx/consul-template/consul/nginx-consul-template/ */ -}}
 {{- /* Refer http://nginx.org/en/docs/http/ngx_http_upstream_module.html#upstream  */ -}}
 {{- range .upstreams }}{{ if eq (or .state "1") "1" -}}
-upstream {{.name}}-pool {
+upstream {{.name}} {
 	least_conn;
 	{{if .keepalive }}keepalive {{.keepalive}};{{end}}
 	{{- range .servers }}{{ if eq (or .state "1") "1" }}

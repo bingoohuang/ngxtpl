@@ -162,7 +162,8 @@ func (t *Tpl) parseDestination() (err error) {
 	}
 	t.Perms = ZeroTo(t.Perms, 0644)
 
-	if _, err = os.Stat(filepath.Dir(t.Destination)); err == nil {
+	dir := filepath.Dir(t.Destination)
+	if _, err = os.Stat(dir); err == nil {
 		return nil
 	}
 
@@ -170,8 +171,8 @@ func (t *Tpl) parseDestination() (err error) {
 		return nil
 	}
 
-	return errors.Wrapf(ErrCfg, "Destination is invalid. "+
-		"it should be valid file or http addr. error: %v", err)
+	return errors.Wrapf(ErrCfg, "Destination dir %s is invalid. "+
+		"it should be valid file or http addr. error: %v", dir, err)
 }
 
 func (t *Tpl) readDestination() ([]byte, error) {
@@ -233,8 +234,14 @@ type CommandResult struct {
 	ExecError error  `json:"execError"`
 }
 
+// Sh executes a bash scripts.
+func Sh(bash string) (*cmd.Cmd, cmd.Status) {
+	p := cmd.NewCmd("sh", "-c", bash)
+	return p, <-p.Start()
+}
+
 func executeCommand(command, commandCheck string) (*CommandResult, bool) {
-	_, status := cmd.Bash(command)
+	_, status := Sh(command)
 	if status.Exit == 0 {
 		logrus.Infof("exec command %s successfully", command)
 	} else {
@@ -250,7 +257,7 @@ func executeCommand(command, commandCheck string) (*CommandResult, bool) {
 	}
 
 	if commandCheck == "" && status.Exit == 0 ||
-		commandCheck != "" && SliceContains(status.Stdout, commandCheck) {
+		commandCheck != "" && SliceContains(append(status.Stdout, status.Stderr...), commandCheck) {
 		// successfully
 		return nil, true
 	}

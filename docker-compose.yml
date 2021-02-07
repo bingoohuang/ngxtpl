@@ -1,0 +1,15 @@
+version: '3.7'
+
+services:
+  redis:
+    image: redis:6.0.10-alpine3.13
+    ports:
+      - 6379:6379
+  ngxtpl:
+    image: openresty/ngxtpl
+    ports:
+      - 8080:8080
+    volumes:
+      - ./testdata/nginx:/etc/nginx/conf.d
+      - ./testdata:/etc/app/
+      - ./logs:/app/logs/

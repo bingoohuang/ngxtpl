@@ -32,3 +32,41 @@ golang nginx template.
 ## reference
 
 1. [slides HCL: A human-friendly language for developers and operators](https://speakerdeck.com/anubhavmishra/hcl-a-human-friendly-language-for-developers-and-operators)
+
+## docker-compose testing env
+
+
+### redis install
+
+1. `docker pull redis:6.0.10-alpine3.13`
+1. `https://phoenixnap.com/kb/docker-redis` `https://hub.docker.com/_/redis`
+1. `docker run --name redis -p 6379:6379 -d redis:6.0.10-alpine3.13` `docker exec -it redis redis-cli`
+
+## openresty install
+
+1. `https://hub.docker.com/r/openresty/openresty`
+1. `docker pull openresty/openresty:1.19.3.1-2-alpine`
+1. `docker run --name openresty -v $PWD/testdata/nginx:/etc/nginx/conf.d  -p 8080:8080 -p 8081:8081 -p 8082:8082 -p 8083:8083 -d openresty/openresty:1.19.3.1-2-alpine`
+
+```sh
+ngxtpl on  master [»!+?] via 🐹 v1.15.7 
+❯ docker-compose exec openresty sh
+/ # ps -ef|grep nginx
+    1 root      0:00 {openresty} nginx: master process /usr/local/openresty/bin/openresty -g daemon off;
+    7 nobody    0:00 {openresty} nginx: worker process
+   15 root      0:00 grep nginx
+/ # /usr/local/openresty/bin/openresty -t
+nginx: the configuration file /usr/local/openresty/nginx/conf/nginx.conf syntax is ok
+nginx: configuration file /usr/local/openresty/nginx/conf/nginx.conf test is successful
+/ # /usr/local/openresty/bin/openresty -s reload
+2021/02/07 09:47:47 [notice] 17#17: signal process started
+/ # echo $?
+0
+/ # 
+```
+
+
+## ngxtpl install
+
+1. `docker build -f Dockerfile -t openresty/ngxtpl .`
+

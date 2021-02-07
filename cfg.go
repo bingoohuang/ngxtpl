@@ -63,7 +63,7 @@ func (c *Cfg) Parse() error {
 }
 
 // ErrCfg defines the error type of bad config.
-var ErrCfg = errors.New("Unknown dataSource(should be redis, mysql or http address)")
+var ErrCfg = errors.New("Errors in the config file")
 
 func (c *Cfg) parseDataSource() (err error) {
 	switch v := c.Tpl.DataSource; v {
@@ -83,8 +83,7 @@ func (c *Cfg) parseDataSource() (err error) {
 		} else if c.Nacos != nil {
 			c.dataSource, err = c.Nacos.Parse()
 		} else {
-			err = errors.Wrapf(ErrCfg,
-				"Unknown dataSource %s, it should be redis or mysql", c.Tpl.DataSource)
+			err = errors.Wrapf(ErrCfg, "Unknown dataSource %s", c.Tpl.DataSource)
 		}
 	}
 
