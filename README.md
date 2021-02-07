@@ -41,6 +41,7 @@ golang nginx template.
 1. `docker pull redis:6.0.10-alpine3.13`
 1. `https://phoenixnap.com/kb/docker-redis` `https://hub.docker.com/_/redis`
 1. `docker run --name redis -p 6379:6379 -d redis:6.0.10-alpine3.13` `docker exec -it redis redis-cli`
+1. [Another Redis DeskTop Manager](https://github.com/qishibo/AnotherRedisDesktopManager)
 
 ## openresty install
 
