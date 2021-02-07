@@ -16,7 +16,7 @@ func TestCfgParse(t *testing.T) {
 
 	assert.Nil(t, hcl.Unmarshal(s, &cfg))
 	assert.Equal(t, ngxtpl.Cfg{
-		Nacos: ngxtpl.Nacos{
+		Nacos: &ngxtpl.Nacos{
 			ClientConfig: ngxtpl.ClientConfig{
 				TimeoutMs:            5000,
 				BeatInterval:         0,
@@ -56,7 +56,7 @@ func TestCfgParse(t *testing.T) {
 				GroupName:   "groupa",
 			},
 		},
-		Mysql: ngxtpl.Mysql{
+		Mysql: &ngxtpl.Mysql{
 			DataSourceName: "user:pass@tcp(127.0.0.1:3306)/db1?charset=utf8",
 			DataKey:        "upstreams",
 			DataSQL: "select name,keepalive,ip_hash ipHash,resolver,'{{servers}}' servers " +
@@ -68,19 +68,21 @@ func TestCfgParse(t *testing.T) {
 			},
 			KVSql: "select value from t_config where key = '{{key}}'",
 		},
-		Redis: ngxtpl.Redis{
+		Redis: &ngxtpl.Redis{
 			Addr:        "localhost:6379",
 			Password:    "",
 			Db:          0,
 			ServicesKey: "services",
 		},
 		Tpl: ngxtpl.Tpl{
-			DataSource:  "redis",
-			Interval:    "10s",
-			TplSource:   "/etc/nginx/conf.d/load-balancer.conf.tpl",
-			Destination: "/etc/nginx/conf.d/load-balancer.conf",
-			Perms:       0600,
-			Command:     "service nginx reload",
+			DataSource:       "redis",
+			Interval:         "10s",
+			TplSource:        "/etc/nginx/conf.d/load-balancer.conf.tpl",
+			Destination:      "/etc/nginx/conf.d/load-balancer.conf",
+			Perms:            0600,
+			TestCommand:      "service nginx -t",
+			TestCommandCheck: "successful",
+			Command:          "service nginx reload",
 		},
 	}, cfg)
 }

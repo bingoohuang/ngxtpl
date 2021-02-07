@@ -23,7 +23,7 @@ import (
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/pflag"
 
-	"github.com/markbates/pkger"
+	"github.com/bingoohuang/pkger"
 )
 
 // ReadPkger reads the content of pkger file.

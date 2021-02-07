@@ -3,6 +3,7 @@ package ngxtpl
 import (
 	"context"
 	"strings"
+	"time"
 
 	"github.com/go-redis/redis/v8"
 	"github.com/pkg/errors"
@@ -14,6 +15,7 @@ type Redis struct {
 	Password    string `hcl:"password"`
 	Db          int    `hcl:"db"`
 	ServicesKey string `hcl:"servicesKey"`
+	ErrorKey    string `hcl:"errorKey"`
 }
 
 // Get gets the value of key from redis.
@@ -34,6 +36,36 @@ func (r Redis) Get(key string) (string, error) {
 	return rdb.Get(ctx, key).Result()
 }
 
+// Write write key and it's value to redis.
+func (r Redis) Write(key, value string) (err error) {
+	rdb := redis.NewClient(&redis.Options{Addr: r.Addr, Password: r.Password, DB: r.Db})
+	defer rdb.Close()
+
+	ctx := context.Background()
+
+	const sep = " "
+
+	if strings.Contains(key, sep) {
+		// treat as a hash
+		hashKey, field := Split2(key, sep)
+		_, err = rdb.HSet(ctx, hashKey, field, value).Result()
+	}
+
+	_, err = rdb.Set(ctx, key, value, 0).Result()
+	return err
+}
+
+// WriteError writes error.
+func (r Redis) WriteError(err error) error {
+	if r.ErrorKey == "" {
+		return nil
+	}
+
+	t := time.Now().Format("2006-01-02 15:04:05.000 ")
+	return r.Write(r.ErrorKey, t+err.Error())
+}
+
+// Read reads the value.
 func (r Redis) Read() (interface{}, error) {
 	v, err := r.Get(r.ServicesKey)
 	if err != nil {

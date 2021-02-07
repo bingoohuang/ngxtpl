@@ -7,6 +7,16 @@ import (
 	"github.com/pkg/errors"
 )
 
+// KeyWriter writes key and value.
+type KeyWriter interface {
+	Write(key, value string) error
+}
+
+// ErrorWriter writes error.
+type ErrorWriter interface {
+	WriteError(err error) error
+}
+
 // KeyReader read by key.
 type KeyReader interface {
 	Get(key string) (string, error)
@@ -33,10 +43,11 @@ func (h HTTPSource) Read() (interface{}, error) {
 
 // Cfg represents the root structure of the config.
 type Cfg struct {
-	Tpl   Tpl   `hcl:"tpl"`
-	Redis Redis `hcl:"redis"`
-	Mysql Mysql `hcl:"mysql"`
-	Nacos Nacos `hcl:"nacos"`
+	Redis *Redis `hcl:"redis"`
+	Mysql *Mysql `hcl:"mysql"`
+	Nacos *Nacos `hcl:"nacos"`
+
+	Tpl Tpl `hcl:"tpl"`
 
 	dataSource DataSource
 	name       string
@@ -58,22 +69,26 @@ func (c *Cfg) parseDataSource() (err error) {
 	switch v := c.Tpl.DataSource; v {
 	case "redis":
 		c.dataSource, err = c.Redis.Parse()
-		return err
 	case "mysql":
 		c.dataSource, err = c.Mysql.Parse()
-		return err
 	case "nacos":
 		c.dataSource, err = c.Nacos.Parse()
-		return err
 	default:
 		if IsHTTPAddress(v) {
 			c.dataSource, err = &HTTPSource{Address: v}, nil
-			return
+		} else if c.Redis != nil {
+			c.dataSource, err = c.Redis.Parse()
+		} else if c.Mysql != nil {
+			c.dataSource, err = c.Mysql.Parse()
+		} else if c.Nacos != nil {
+			c.dataSource, err = c.Nacos.Parse()
+		} else {
+			err = errors.Wrapf(ErrCfg,
+				"Unknown dataSource %s, it should be redis or mysql", c.Tpl.DataSource)
 		}
 	}
 
-	return errors.Wrapf(ErrCfg,
-		"Unknown dataSource %s, it should be redis or mysql", c.Tpl.DataSource)
+	return err
 }
 
 // DecodeCfgFiles decodes the config files to Cfg structs.
@@ -86,7 +101,6 @@ func DecodeCfgFiles(cfgFiles []string) (cfgs Cfgs) {
 		}
 
 		cfgs[i].name = cfgFile
-
 		if err := cfgs[i].Parse(); err != nil {
 			panic(err)
 		}
@@ -100,7 +114,6 @@ func (c Cfg) Run() {
 	defer c.Tpl.resetTicker()
 
 	logrus.Infof("Start to run config file %s", c.name)
-
 	m, err := c.dataSource.Read()
 	if err != nil {
 		logrus.Warnf("failed to read template data: %v", err)
@@ -109,6 +122,10 @@ func (c Cfg) Run() {
 
 	if err := c.Tpl.Execute(m, c.dataSource, c.name); err != nil {
 		logrus.Warnf("failed to execute tpl: %v", err)
+
+		if ew, ok := c.dataSource.(ErrorWriter); ok {
+			_ = ew.WriteError(err)
+		}
 	}
 }
 
@@ -144,7 +161,7 @@ func (c Cfgs) loopRun() {
 				select {
 				case <-singalCtx.Done():
 					return
-				case <-cfg.Tpl.tiker.C:
+				case <-cfg.Tpl.ticker.C:
 					c <- i
 				}
 			}

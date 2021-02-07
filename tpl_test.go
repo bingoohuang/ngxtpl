@@ -28,11 +28,11 @@ type Server struct {
 	Address     string `json:"address"`
 	Port        string `json:"port"`
 	Weight      string `json:"weight"`      // eg. weight=5， sets the weight of the server.
-	MaxConns    string `json:"maxConns"`    // Default value is zero, meaning there is no limit.
+	MaxConns    string `json:"maxConns"`    // DefaultTo value is zero, meaning there is no limit.
 	MaxFails    string `json:"maxFails"`    // By default, the number of unsuccessful attempts is set to 1
 	FailTimeout string `json:"failTimeout"` // By default, the parameter is set to 10 seconds.
 	Backup      string `json:"backup"`
-	SlowStart   string `json:"slowStart"` // Default value is zero, i.e. slow start is disabled.
+	SlowStart   string `json:"slowStart"` // DefaultTo value is zero, i.e. slow start is disabled.
 }
 
 func TestMapArg(t *testing.T) {

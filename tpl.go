@@ -2,6 +2,7 @@ package ngxtpl
 
 import (
 	"bytes"
+	"encoding/json"
 	"fmt"
 	"io/ioutil"
 	"os"
@@ -23,10 +24,17 @@ type Tpl struct {
 	TplSource   string `hcl:"tplSource"`
 	Destination string `hcl:"destination"`
 	Perms       int    `hcl:"perms"`
-	Command     string `hcl:"command"`
+	// 测试命令
+	TestCommand string `hcl:"testCommand"`
+	// 测试命令执行结果检查，例如有OK字眼，不配置，则只检测测试命令的执行状态
+	TestCommandCheck string `hcl:"testCommandCheck"`
+
+	Command string `hcl:"command"`
+	// 结果检查，例如有OK字眼，不配置，则只检测测试命令的执行状态ß
+	CommandCheck string `hcl:"commandCheck"`
 
 	interval time.Duration
-	tiker    *time.Ticker
+	ticker   *time.Ticker
 }
 
 // Execute executes the template.
@@ -64,10 +72,15 @@ func (t *Tpl) Execute(data interface{}, ds DataSource, cfgName string) error {
 
 	if err := t.writeDestination(newContent); err != nil {
 		logrus.Errorf("failed to write destination %s err: %v", t.Destination, err)
-		return nil
+		return err
 	}
 
-	return t.executeCommand()
+	if err := t.executeCommand(); err != nil {
+		_ = t.writeDestination(oldContent) // rollback destination
+		return err
+	}
+
+	return nil
 }
 
 // Parse parses and validates the template.
@@ -84,27 +97,30 @@ func (t *Tpl) Parse(ds DataSource) error {
 }
 
 func (t *Tpl) parseInterval() error {
-	if t.Interval == "" {
-		t.Interval = "0"
-	}
-
-	v, err := time.ParseDuration(t.Interval)
+	v, err := time.ParseDuration(DefaultTo(t.Interval, "0"))
 	if err != nil {
 		return err
 	}
 
-	t.interval = v
-
-	if t.interval > 0 {
-		t.tiker = time.NewTicker(t.interval)
+	if t.interval = v; t.interval > 0 {
+		t.ticker = time.NewTicker(t.interval)
 	}
 
 	return nil
 }
 
+// DefaultTo test a, return b if a is empty.
+func DefaultTo(a, b string) string {
+	if a == "" {
+		return b
+	}
+
+	return a
+}
+
 func (t *Tpl) resetTicker() {
-	if t.tiker != nil {
-		t.tiker.Reset(t.interval)
+	if t.ticker != nil {
+		t.ticker.Reset(t.interval)
 	}
 }
 
@@ -140,15 +156,13 @@ func loadSourceContent(source string, ds DataSource) (string, error) {
 	return source, nil
 }
 
-func (t *Tpl) parseDestination() error {
+func (t *Tpl) parseDestination() (err error) {
 	if t.Destination == "" {
 		return nil
 	}
 	t.Perms = ZeroTo(t.Perms, 0644)
 
-	dir := filepath.Dir(t.Destination)
-	_, err := os.Stat(dir)
-	if err == nil {
+	if _, err = os.Stat(filepath.Dir(t.Destination)); err == nil {
 		return nil
 	}
 
@@ -166,10 +180,8 @@ func (t *Tpl) readDestination() ([]byte, error) {
 	}
 
 	f, err := ReadFileE(t.Destination)
-	if err != nil {
-		if os.IsNotExist(err) {
-			return nil, nil
-		}
+	if err != nil && os.IsNotExist(err) {
+		return nil, nil
 	}
 
 	return f, err
@@ -198,11 +210,35 @@ func (t *Tpl) executeCommand() error {
 		return nil
 	}
 
-	_, status := cmd.Bash(t.Command)
+	if t.TestCommand != "" {
+		if ret, ok := executeCommand(t.TestCommand, t.TestCommandCheck); !ok {
+			retJSON, _ := json.Marshal(ret)
+			return fmt.Errorf("executeTestCommand %s failed: %s", t.TestCommand, string(retJSON))
+		}
+	}
+
+	if ret, ok := executeCommand(t.Command, t.CommandCheck); !ok {
+		retJSON, _ := json.Marshal(ret)
+		return fmt.Errorf("executeCommand %s failed: %s", t.Command, string(retJSON))
+	}
+
+	return nil
+}
+
+// CommandResult is the result of command execution.
+type CommandResult struct {
+	ExitCode  int    `json:"exitCode"`
+	Stdout    string `json:"stdout"`
+	Stderr    string `json:"stderr"`
+	ExecError error  `json:"execError"`
+}
+
+func executeCommand(command, commandCheck string) (*CommandResult, bool) {
+	_, status := cmd.Bash(command)
 	if status.Exit == 0 {
-		logrus.Infof("exec command %s successfully", t.Command)
+		logrus.Infof("exec command %s successfully", command)
 	} else {
-		logrus.Infof("exec command %s failed with exit code %d", t.Command, status.Exit)
+		logrus.Infof("exec command %s failed with exit code %d", command, status.Exit)
 	}
 
 	if len(status.Stdout) > 0 {
@@ -213,7 +249,29 @@ func (t *Tpl) executeCommand() error {
 		logrus.Errorf("%s", strings.Join(status.Stderr, "\n"))
 	}
 
-	return nil
+	if commandCheck == "" && status.Exit == 0 ||
+		commandCheck != "" && SliceContains(status.Stdout, commandCheck) {
+		// successfully
+		return nil, true
+	}
+
+	return &CommandResult{
+		ExitCode:  status.Exit,
+		Stdout:    strings.Join(status.Stdout, "\n"),
+		Stderr:    strings.Join(status.Stderr, "\n"),
+		ExecError: status.Error,
+	}, false
+}
+
+// SliceContains test if any element in slice contains sub.
+func SliceContains(ss []string, sub string) bool {
+	for _, s := range ss {
+		if strings.Contains(s, sub) {
+			return true
+		}
+	}
+
+	return false
 }
 
 //  MapInt returns the int value associated with given key in the map.

@@ -65,6 +65,8 @@ tpl {
   tplSource = "/etc/nginx/conf.d/load-balancer.conf.tpl"
   destination = "/etc/nginx/conf.d/load-balancer.conf"
   perms = 0600
+  testCommand = "service nginx -t"
+  testCommandCheck = "successful"
   command = "service nginx reload"
 }
 
