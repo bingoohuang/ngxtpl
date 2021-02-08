@@ -9,6 +9,7 @@ services:
     image: openresty/ngxtpl
     ports:
       - 8080:8080
+      - 8099:8099
     volumes:
       - ./testdata/nginx:/etc/nginx/conf.d
       - ./testdata:/etc/app/

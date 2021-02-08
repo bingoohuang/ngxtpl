@@ -62,6 +62,7 @@ func (t *Tpl) Execute(data interface{}, ds DataSource, cfgName string, result *R
 		return err
 	}
 
+	result.Old = string(oldContent)
 	if bytes.Equal(newContent, oldContent) {
 		result.StatusCode = 304
 		logrus.Infof("nothing changed for config file: %s", cfgName)
