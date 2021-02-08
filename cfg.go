@@ -13,9 +13,9 @@ type KeyWriter interface {
 
 type Result struct {
 	Time       string `json:"time"`
-	Old        string `json:"old"`
-	New        string `json:"new"`
-	Error      string `json:"error"`
+	Old        string `json:"old,omitempty"`
+	New        string `json:"new,omitempty"`
+	Error      string `json:"error,omitempty"`
 	StatusCode int    `json:"statusCode"`
 }
 
