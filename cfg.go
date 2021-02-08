@@ -1,10 +1,9 @@
 package ngxtpl
 
 import (
-	"github.com/sirupsen/logrus"
-
 	"github.com/hashicorp/hcl"
 	"github.com/pkg/errors"
+	"github.com/sirupsen/logrus"
 )
 
 // KeyWriter writes key and value.
@@ -12,9 +11,17 @@ type KeyWriter interface {
 	Write(key, value string) error
 }
 
-// ErrorWriter writes error.
-type ErrorWriter interface {
-	WriteError(err error) error
+type Result struct {
+	Time       string `json:"time"`
+	Old        string `json:"old"`
+	New        string `json:"new"`
+	Error      string `json:"error"`
+	StatusCode int    `json:"statusCode"`
+}
+
+// ResultWriter writes error.
+type ResultWriter interface {
+	WriteResult(Result) error
 }
 
 // KeyReader read by key.
@@ -119,12 +126,16 @@ func (c Cfg) Run() {
 		return
 	}
 
-	if err := c.Tpl.Execute(m, c.dataSource, c.name); err != nil {
-		logrus.Warnf("failed to execute tpl: %v", err)
+	result := Result{}
 
-		if ew, ok := c.dataSource.(ErrorWriter); ok {
-			_ = ew.WriteError(err)
-		}
+	if err := c.Tpl.Execute(m, c.dataSource, c.name, &result); err != nil {
+		logrus.Warnf("failed to execute tpl: %v", err)
+		result.Error = err.Error()
+		result.StatusCode = 400
+	}
+
+	if ew, ok := c.dataSource.(ResultWriter); ok {
+		_ = ew.WriteResult(result)
 	}
 }
 

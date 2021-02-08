@@ -38,7 +38,7 @@ type Tpl struct {
 }
 
 // Execute executes the template.
-func (t *Tpl) Execute(data interface{}, ds DataSource, cfgName string) error {
+func (t *Tpl) Execute(data interface{}, ds DataSource, cfgName string, result *Result) error {
 	var out bytes.Buffer
 
 	sourceContent, err := t.parseSource(ds)
@@ -63,12 +63,17 @@ func (t *Tpl) Execute(data interface{}, ds DataSource, cfgName string) error {
 	}
 
 	if bytes.Equal(newContent, oldContent) {
+		result.StatusCode = 304
 		logrus.Infof("nothing changed for config file: %s", cfgName)
 		return nil
 	}
 
-	logrus.Infof("new content %s", string(newContent))
-	logrus.Infof("old content %s", string(oldContent))
+	result.Old = string(oldContent)
+	result.New = string(newContent)
+	result.StatusCode = 200
+
+	logrus.Infof("new content %s", result.New)
+	logrus.Infof("old content %s", result.Old)
 
 	if err := t.writeDestination(newContent); err != nil {
 		logrus.Errorf("failed to write destination %s err: %v", t.Destination, err)
@@ -89,8 +94,8 @@ func (t *Tpl) Parse(ds DataSource) error {
 		return err
 	}
 
-	if _, err := t.parseSource(ds); err != nil {
-		return err
+	if t.TplSource == "" {
+		return errors.Wrapf(ErrCfg, "source is empty")
 	}
 
 	return t.parseDestination()
@@ -125,10 +130,6 @@ func (t *Tpl) resetTicker() {
 }
 
 func (t *Tpl) parseSource(ds DataSource) (string, error) {
-	if t.TplSource == "" {
-		return "", errors.Wrapf(ErrCfg, "source is empty")
-	}
-
 	return loadSourceContent(t.TplSource, ds)
 }
 
@@ -141,9 +142,9 @@ func loadSourceContent(source string, ds DataSource) (string, error) {
 	// 2. 尝试从datasource读
 	const dataSourcePrefix = "dataSource:"
 	if strings.HasPrefix(source, dataSourcePrefix) {
-		dataSourceKey := source[len(dataSourcePrefix):]
+		k := source[len(dataSourcePrefix):]
 		if kr, ok := ds.(KeyReader); ok {
-			return kr.Get(dataSourceKey)
+			return kr.Get(k)
 		}
 	}
 

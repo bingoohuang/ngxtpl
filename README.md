@@ -35,7 +35,6 @@ golang nginx template.
 
 ## docker-compose testing env
 
-
 ### redis install
 
 1. `docker pull redis:6.0.10-alpine3.13`
@@ -66,8 +65,24 @@ nginx: configuration file /usr/local/openresty/nginx/conf/nginx.conf test is suc
 / # 
 ```
 
-
 ## ngxtpl install
 
 1. `docker build -f Dockerfile -t openresty/ngxtpl .`
 
+## docker compose
+
+1. `docker-compose up`
+1. set `tpl` ([demo](testdata/upstreams.tpl)) and `services`([demo](testdata/upstreams.json)) in redis by docker.hcl config.
+1. change `services` data in redis and run curl to check results:
+
+```sh
+🕙[ 00:13:06 ] ❯ for n in {1..8}; do curl 127.0.0.1:8080/service1/abc;print; done
+8081 welcome you!
+{"status":"success","result":"8082 nginx json"}
+8083 welcome you!
+8084 welcome you!
+8081 welcome you!
+{"status":"success","result":"8082 nginx json"}
+8083 welcome you!
+8084 welcome you!
+```

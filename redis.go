@@ -2,6 +2,7 @@ package ngxtpl
 
 import (
 	"context"
+	"encoding/json"
 	"strings"
 	"time"
 
@@ -15,7 +16,7 @@ type Redis struct {
 	Password    string `hcl:"password"`
 	Db          int    `hcl:"db"`
 	ServicesKey string `hcl:"servicesKey"`
-	ErrorKey    string `hcl:"errorKey"`
+	ResultKey   string `hcl:"resultKey"`
 }
 
 // Get gets the value of key from redis.
@@ -56,13 +57,14 @@ func (r Redis) Write(key, value string) (err error) {
 }
 
 // WriteError writes error.
-func (r Redis) WriteError(err error) error {
-	if r.ErrorKey == "" {
+func (r Redis) WriteResult(result Result) error {
+	if r.ResultKey == "" {
 		return nil
 	}
 
-	t := time.Now().Format("2006-01-02 15:04:05.000 ")
-	return r.Write(r.ErrorKey, t+err.Error())
+	result.Time = time.Now().Format("2006-01-02 15:04:05.000 ")
+	bytes, _ := json.Marshal(result)
+	return r.Write(r.ResultKey, string(bytes))
 }
 
 // Read reads the value.
