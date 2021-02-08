@@ -3,7 +3,7 @@ module github.com/bingoohuang/ngxtpl
 go 1.12
 
 require (
-	github.com/bingoohuang/golog v0.0.0-20201021094539-9a7b83a4be08
+	github.com/bingoohuang/golog v0.0.0-20210208132912-c8d1eeadad5a
 	github.com/bingoohuang/pkger v0.0.0-20210127185155-a71b9df4c4c7
 	github.com/go-redis/redis/v8 v8.4.0
 	github.com/go-sql-driver/mysql v1.5.0
@@ -15,4 +15,5 @@ require (
 	github.com/sirupsen/logrus v1.6.0
 	github.com/spf13/pflag v1.0.5
 	github.com/stretchr/testify v1.6.1
+	github.com/takama/daemon v1.0.0
 )

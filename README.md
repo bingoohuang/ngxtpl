@@ -86,3 +86,7 @@ nginx: configuration file /usr/local/openresty/nginx/conf/nginx.conf test is suc
 8083 welcome you!
 8084 welcome you!
 ```
+
+## daemon service on linux
+
+`/app/ngxtpl install -c /etc/app/docker.hcl; /app/ngxtpl start`

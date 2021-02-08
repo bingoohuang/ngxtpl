@@ -15,5 +15,5 @@ WORKDIR /app
 RUN apk --no-cache add ca-certificates tzdata  && \
     ln -sf /usr/share/zoneinfo/Asia/Shanghai /etc/localtime && \
     echo "Asia/Shanghai" > /etc/timezone
-COPY --from=0 /go/bin/ngxtpl ./app
-CMD ["sh", "-c", "/usr/local/openresty/bin/openresty; ./app -c /etc/app/docker.hcl"]
+COPY --from=0 /go/bin/ngxtpl /app/ngxtpl
+CMD ["sh", "-c", "/usr/local/openresty/bin/openresty; /app/ngxtpl install -c /etc/app/docker.hcl; /app/ngxtpl start"]

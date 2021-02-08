@@ -99,12 +99,12 @@ func SetupSingalsWithContext(parent context.Context, sig ...os.Signal) context.C
 }
 
 // PflagParse parses the plag and check unknown args.
-func PflagParse() {
-	pflag.Parse()
+func PflagParse(f *pflag.FlagSet, args []string) {
+	f.Parse(args)
 
-	if pflag.NArg() > 0 {
-		logrus.Errorf("Unknown args %s\n", strings.Join(pflag.Args(), " "))
-		pflag.PrintDefaults()
+	if f.NArg() > 0 {
+		logrus.Errorf("Unknown args %s\n", strings.Join(f.Args(), " "))
+		f.PrintDefaults()
 		os.Exit(-1)
 	}
 }
