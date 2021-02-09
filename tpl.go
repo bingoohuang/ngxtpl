@@ -90,7 +90,7 @@ func (t *Tpl) Execute(data interface{}, ds DataSource, cfgName string, result *R
 }
 
 // Parse parses and validates the template.
-func (t *Tpl) Parse(ds DataSource) error {
+func (t *Tpl) Parse() error {
 	if err := t.parseInterval(); err != nil {
 		return err
 	}
@@ -242,7 +242,7 @@ func Sh(bash string) (*cmd.Cmd, cmd.Status) {
 	return p, <-p.Start()
 }
 
-func executeCommand(command, commandCheck string) (*CommandResult, bool) {
+func executeCommand(command, check string) (*CommandResult, bool) {
 	_, status := Sh(command)
 	if status.Exit == 0 {
 		logrus.Infof("exec command %s successfully", command)
@@ -258,8 +258,8 @@ func executeCommand(command, commandCheck string) (*CommandResult, bool) {
 		logrus.Errorf("%s", strings.Join(status.Stderr, "\n"))
 	}
 
-	if commandCheck == "" && status.Exit == 0 ||
-		commandCheck != "" && SliceContains(append(status.Stdout, status.Stderr...), commandCheck) {
+	if check == "" && status.Exit == 0 ||
+		check != "" && SliceContains(append(status.Stdout, status.Stderr...), check) {
 		// successfully
 		return nil, true
 	}

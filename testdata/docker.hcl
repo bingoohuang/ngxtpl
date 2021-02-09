@@ -13,8 +13,8 @@ tpl {
   # 设置了interval，则会进入循环，每次间隔interval时间后，执行一次
   interval = "10s"
   tplSource = "dataSource:tpl"
-  destination = "/etc/app/nginx/upstreams.conf"
-  perms = 0600
+  destination = "/etc/app/nginx/services.conf"
+  #perms = 0644
   testCommand = "/usr/local/openresty/bin/openresty -t"
   testCommandCheck = "successful"
   command = "/usr/local/openresty/bin/openresty -s reload"

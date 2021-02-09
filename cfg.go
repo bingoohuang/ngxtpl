@@ -66,7 +66,7 @@ func (c *Cfg) Parse() error {
 		return err
 	}
 
-	return c.Tpl.Parse(c.dataSource)
+	return c.Tpl.Parse()
 }
 
 // ErrCfg defines the error type of bad config.
@@ -127,11 +127,10 @@ func (c Cfg) Run() {
 	}
 
 	result := Result{}
-
 	if err := c.Tpl.Execute(m, c.dataSource, c.name, &result); err != nil {
 		logrus.Warnf("failed to execute tpl: %v", err)
-		result.Error = err.Error()
 		result.StatusCode = 400
+		result.Error = err.Error()
 	}
 
 	if ew, ok := c.dataSource.(ResultWriter); ok {
