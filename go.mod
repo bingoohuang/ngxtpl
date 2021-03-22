@@ -3,7 +3,7 @@ module github.com/bingoohuang/ngxtpl
 go 1.12
 
 require (
-	github.com/bingoohuang/golog v0.0.0-20210208132912-c8d1eeadad5a
+	github.com/bingoohuang/golog v0.0.0-20210322080612-784352c5358e
 	github.com/bingoohuang/pkger v0.0.0-20210127185155-a71b9df4c4c7
 	github.com/go-redis/redis/v8 v8.4.0
 	github.com/go-sql-driver/mysql v1.5.0

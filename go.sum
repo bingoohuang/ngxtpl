@@ -5,6 +5,8 @@ github.com/aliyun/alibaba-cloud-sdk-go v1.61.18/go.mod h1:v8ESoHo4SyHmuB4b1tJqDH
 github.com/bingoohuang/ginx v0.0.0-20200729033750-047869f5e81c/go.mod h1:fv5fKhsGUfPInVsslF5FJv2oNlZn153C5OogaaUFvFc=
 github.com/bingoohuang/golog v0.0.0-20210208132912-c8d1eeadad5a h1:zLuuQ+/oCI8r/sen+cv+G+Byo0Scrl+yumxjAqBm3zw=
 github.com/bingoohuang/golog v0.0.0-20210208132912-c8d1eeadad5a/go.mod h1:NMB5RiZQOln+BwIoHZIaA1XYmdrE4lvTfwTrT7Vx8Hs=
+github.com/bingoohuang/golog v0.0.0-20210322080612-784352c5358e h1:g7piW3WfkxrqxmVLiWa9oHJ153PVDyuYu8uybadHNwY=
+github.com/bingoohuang/golog v0.0.0-20210322080612-784352c5358e/go.mod h1:NMB5RiZQOln+BwIoHZIaA1XYmdrE4lvTfwTrT7Vx8Hs=
 github.com/bingoohuang/pkger v0.0.0-20210127185155-a71b9df4c4c7 h1:y1psu0GOZ8SZFBLq4iAJLskNYR83NXPXBK6wrZ5MmU4=
 github.com/bingoohuang/pkger v0.0.0-20210127185155-a71b9df4c4c7/go.mod h1:GJXGVR/nVdNNo7wNQm/FFh0uznqYCVxsL3TL6sk+LKU=
 github.com/bingoohuang/sariaf v0.0.0-20201222043148-21fd9703b115/go.mod h1:DSi1LVR76Ap189KzzA40C8pFSpRZHsy/n+kgK8ihfhs=

@@ -23,7 +23,9 @@ type Tpl struct {
 	Interval    string `hcl:"interval"`
 	TplSource   string `hcl:"tplSource"`
 	Destination string `hcl:"destination"`
-	Perms       int    `hcl:"perms"`
+	// 执行命令（包括测试命令）失败时，写入导致失败的内容
+	FailedDestination string `hcl:"failDestination"`
+	Perms             int    `hcl:"perms"`
 	// 测试命令
 	TestCommand string `hcl:"testCommand"`
 	// 测试命令执行结果检查，例如有OK字眼，不配置，则只检测测试命令的执行状态
@@ -73,16 +75,17 @@ func (t *Tpl) Execute(data interface{}, ds DataSource, cfgName string, result *R
 	result.New = string(newContent)
 	result.StatusCode = 200
 
-	logrus.Infof("new content %s", result.New)
-	logrus.Infof("old content %s", result.Old)
+	logrus.Infof("{PRE}new content %s", result.New)
+	logrus.Infof("{PRE}old content %s", result.Old)
 
-	if err := t.writeDestination(newContent); err != nil {
+	if err := t.writeDestination(t.Destination, newContent); err != nil {
 		logrus.Errorf("failed to write destination %s err: %v", t.Destination, err)
 		return err
 	}
 
 	if err := t.executeCommand(); err != nil {
-		_ = t.writeDestination(oldContent) // rollback destination
+		_ = t.writeDestination(t.Destination, oldContent)       // rollback destination
+		_ = t.writeDestination(t.FailedDestination, newContent) // try save failed context
 		return err
 	}
 
@@ -190,22 +193,22 @@ func (t *Tpl) readDestination() ([]byte, error) {
 	return f, err
 }
 
-func (t *Tpl) writeDestination(content []byte) error {
-	if t.Destination == "" {
+func (t *Tpl) writeDestination(destination string, content []byte) error {
+	if destination == "" {
 		return nil
 	}
 
-	if IsHTTPAddress(t.Destination) {
-		resp, err := HTTPPost(t.Destination, content)
+	if IsHTTPAddress(destination) {
+		resp, err := HTTPPost(destination, content)
 		if err != nil {
 			return err
 		}
 
-		logrus.Infof("POST %s response %s", t.Destination, string(resp))
+		logrus.Infof("POST %s response %s", destination, string(resp))
 		return nil
 	}
 
-	return ioutil.WriteFile(t.Destination, content, os.FileMode(t.Perms))
+	return ioutil.WriteFile(destination, content, os.FileMode(t.Perms))
 }
 
 func (t *Tpl) executeCommand() error {

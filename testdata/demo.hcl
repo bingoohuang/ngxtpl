@@ -13,6 +13,7 @@ tpl {
   # 设置了interval，则会进入循环，每次间隔interval时间后，执行一次
   interval = "10s"
   tplSource = "testdata/upstreams.tpl"
+  failDestination = "testdata/upstreams_fail.conf"
   destination = "testdata/upstreams.conf"
   perms = 0600
   command = "echo reloaded"
