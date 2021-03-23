@@ -49,8 +49,7 @@ golang nginx template.
 1. `docker run --name openresty -v $PWD/testdata/nginx:/etc/nginx/conf.d  -p 8080:8080 -p 8081:8081 -p 8082:8082 -p 8083:8083 -d openresty/openresty:1.19.3.1-2-alpine`
 
 ```sh
-ngxtpl on  master [»!+?] via 🐹 v1.15.7 
-❯ docker-compose exec openresty sh
+$ docker-compose exec openresty sh
 / # ps -ef|grep nginx
     1 root      0:00 {openresty} nginx: master process /usr/local/openresty/bin/openresty -g daemon off;
     7 nobody    0:00 {openresty} nginx: worker process
@@ -76,7 +75,7 @@ nginx: configuration file /usr/local/openresty/nginx/conf/nginx.conf test is suc
 1. change `services` data in redis and run curl to check results:
 
 ```sh
-🕙[ 00:13:06 ] ❯ for n in {1..8}; do curl 127.0.0.1:8080/service1/abc;print; done
+🕙[ 00:13:06 ] ❯ for n in {1..8}; do curl 127.0.0.1:8090/service1/abc;print; done
 8081 welcome you!
 {"status":"success","result":"8082 nginx json"}
 8083 welcome you!

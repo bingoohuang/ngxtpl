@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"github.com/bingoohuang/gg/pkg/ctl"
 	"github.com/takama/daemon"
-	"log"
 	"os"
 
 	"github.com/bingoohuang/golog"
@@ -49,7 +48,7 @@ func serviceProcess(desc string) []string {
 	case "install", "remove", "start", "stop", "status":
 		srv, err = daemon.New(os.Args[0], desc, daemon.SystemDaemon)
 		if err != nil {
-			log.Println("Error: ", err)
+			fmt.Print("Error: ", err)
 			os.Exit(1)
 		}
 	}

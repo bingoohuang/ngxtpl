@@ -8,12 +8,12 @@ RUN go mod download -x
 
 # copy source code
 COPY . .
-RUN go install ./...
+RUN apk upgrade --no-cache && apk add --no-cache make && make
 
-FROM openresty/openresty:1.19.3.1-2-alpine
+FROM openresty/openresty:1.19.3.1-3-alpine
 WORKDIR /app
-RUN apk --no-cache add ca-certificates tzdata  && \
+RUN apk --no-cache add ca-certificates tzdata openrc  && \
     ln -sf /usr/share/zoneinfo/Asia/Shanghai /etc/localtime && \
     echo "Asia/Shanghai" > /etc/timezone
-COPY --from=0 /go/bin/ngxtpl /app/ngxtpl
-CMD ["sh", "-c", "/usr/local/openresty/bin/openresty; /app/ngxtpl install -c /etc/app/docker.hcl; /app/ngxtpl start"]
+COPY --from=0 /go/bin/ngxtpl /usr/local/bin
+CMD ["sh", "-c", "/usr/local/openresty/bin/openresty; ngxtpl install -c /etc/app/docker.hcl; ngxtpl start; tail -f /dev/null"]
