@@ -2,6 +2,7 @@ package ngxtpl
 
 import (
 	"database/sql"
+	"github.com/bingoohuang/gg/pkg/sqx"
 	"strings"
 
 	"github.com/sirupsen/logrus"
@@ -51,16 +52,12 @@ func (t Mysql) Get(key string) (string, error) {
 	defer db.Close()
 
 	query := strings.ReplaceAll(t.KVSql, "{{key}}", key)
-	results, cols, err := QueryRows(db, query, 1)
+	val, err := sqx.SQL{Query: query}.QueryAsString(db)
 	if err != nil {
 		return "", err
 	}
 
-	if len(results) == 0 {
-		return "", errors.Wrapf(ErrCfg, "no value found")
-	}
-
-	return results[0][cols[0]].(string), nil
+	return val, nil
 }
 
 func (t Mysql) Read() (interface{}, error) {
@@ -71,19 +68,38 @@ func (t Mysql) Read() (interface{}, error) {
 
 	defer db.Close()
 
-	results, _, err := QueryRows(db, t.DataSQL, 0)
+	result, err := sqx.SQL{Query: t.DataSQL}.QueryAsMaps(db)
 	if err != nil {
 		return nil, err
 	}
 
-	for _, m := range results {
+	mm := ConvertToMapInterfaceSlice(result)
+	for _, m := range mm {
 		t.fulfil(db, m)
 	}
 
 	out := make(map[string]interface{})
-	out[t.DataKey] = results
+	out[t.DataKey] = mm
 
 	return out, nil
+}
+
+func ConvertToMapInterfaceSlice(m []map[string]string) []map[string]interface{} {
+	vv := make([]map[string]interface{}, len(m))
+
+	for i, v := range m {
+		vv[i] = ConvertToMapInterface(v)
+	}
+
+	return vv
+}
+
+func ConvertToMapInterface(v map[string]string) map[string]interface{} {
+	m := make(map[string]interface{})
+	for k, v := range v {
+		m[k] = v
+	}
+	return m
 }
 
 func (t Mysql) fulfil(db *sql.DB, m map[string]interface{}) {
@@ -99,7 +115,7 @@ func (t Mysql) fulfil(db *sql.DB, m map[string]interface{}) {
 			continue
 		}
 
-		sub, _, err := QueryRows(db, query, 0)
+		sub, err := sqx.SQL{Query: query}.QueryAsMaps(db)
 		if err != nil {
 			logrus.Warnf("failed to execute sql %s, error: %v", query, err)
 			continue

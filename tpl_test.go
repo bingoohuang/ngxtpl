@@ -70,7 +70,7 @@ func TestMapArg(t *testing.T) {
 
 func TestUpstreamsTemplate(t *testing.T) {
 	tmpl := template.New("upstreams")
-	tmplText, err := ioutil.ReadFile("testdata/upstreams.tpl")
+	tmplText, err := ioutil.ReadFile("testdata/test_upstreams.tpl")
 	assert.Nil(t, err)
 
 	tmpl, err = tmpl.Parse(string(tmplText))
@@ -100,12 +100,13 @@ func TestUpstreamsTemplate(t *testing.T) {
 	}
 	assert.Nil(t, err)
 	assert.Equal(t,
-		`upstream service1-pool {
+		`upstream service1 {
 	least_conn;
 	keepalive 32;
 	server 127.0.0.1:8001;
 	server 127.0.0.1:8002;
 }
+
 `, out.String())
 
 	s3 := Server{
@@ -171,19 +172,20 @@ func TestUpstreamsTemplate(t *testing.T) {
 	out.Reset()
 	assert.Nil(t, tmpl.Execute(&out, ToMap(data)))
 	assert.Equal(t,
-		`upstream service1-pool {
+		`upstream service1 {
 	least_conn;
 	keepalive 32;
 	server 127.0.0.1:8001;
 	server 127.0.0.1:8002;
 }
-upstream service2-pool {
+upstream service2 {
 	least_conn;
 	keepalive 32;
 	server 127.0.0.1:8201;
 	server 127.0.0.1:8202;
 	server 192.168.1.1:80 weight=10 max_conns=10 max_fails=10 fail_timeout=10s backup slow_start=30s;
 }
+
 `, out.String())
 }
 

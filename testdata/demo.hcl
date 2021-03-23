@@ -5,6 +5,7 @@ redis {
   # servicesKey = "services"
   servicesKey = "__gateway_redis__ upstreams"
   # 如果是hash的，servicesKey = "hashKey field"
+  resultKey = "__gateway_redis__ upstreams_result"
 }
 
 tpl {

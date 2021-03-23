@@ -1,19 +1,23 @@
-.PHONY: default test install
-all: default test install
+.PHONY: default
+all: default
 
-app=ngxtpl
+app=$(notdir $(shell pwd))
+# https://git-scm.com/docs/git-rev-list#Documentation/git-rev-list.txt-emaIem
+COMMIT ?= $(shell git rev-list --oneline --format=format:'%h@%aI' --max-count=1 `git rev-parse HEAD` | tail -1)
+COMMIT = $(shell date  +"%Y-%m-%dT%H:%M:%S%z")
+LDFLAGS ?= -s -w -X github.com/bingoohuang/gg/pkg/ctl.COMMIT=${COMMIT}
+
+default: install
 
 tool:
 	go get github.com/securego/gosec/cmd/gosec
-	go get github.com/bingoohuang/pkger/cmd/pkger
 
 sec:
 	@gosec ./...
 	@echo "[OK] Go security check was completed!"
 
 init:
-	export GOPROXY=https://goproxy.io
-	pkger
+	export GOPROXY=https://goproxy.cn
 
 lint:
 	#golangci-lint run --enable-all
@@ -29,16 +33,17 @@ fmt:
 	goimports -w .
 
 install: init
-	go install -ldflags="-s -w" ./...
-	ls -lh ~/go/bin/${app}
+	go install -ldflags="$(LDFLAGS)" ./...
+	ls -lh $$(which ${app})
 
 linux: init
-	GOOS=linux GOARCH=amd64 go install -ldflags="-s -w" ./...
+	GOOS=linux GOARCH=amd64 go install -ldflags="$(LDFLAGS)" ./...
+	upx ~/go/bin/linux_amd64/${app}
 
 upx:
-	ls -lh ~/go/bin/${app}
-	upx ~/go/bin/${app}
-	ls -lh ~/go/bin/${app}
+	ls -lh $$(which ${app})
+	upx $$(which ${app})
+	ls -lh $$(which ${app})
 	ls -lh ~/go/bin/linux_amd64/${app}
 	upx ~/go/bin/linux_amd64/${app}
 	ls -lh ~/go/bin/linux_amd64/${app}

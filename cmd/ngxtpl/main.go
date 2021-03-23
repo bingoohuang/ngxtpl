@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"github.com/bingoohuang/gg/pkg/ctl"
 	"github.com/takama/daemon"
 	"log"
 	"os"
@@ -14,20 +15,18 @@ import (
 
 func main() {
 	f := pflag.NewFlagSet(os.Args[0], pflag.ExitOnError)
-	demoCfg := f.BoolP("demo", "", false, "create demo.hcl file")
-	version := f.BoolP("version", "v", false, "create demo.hcl file")
-	configFiles := f.StringSliceP("cfgs", "c", nil, "config files")
+	initing := f.Bool("init", false, "init sample conf.yaml/ctl and then exit")
+	version := f.Bool("version", false, "show version info and exit")
+	configFiles := f.StringSliceP("conf", "c", nil, "config files")
 	ngxtpl.PflagParse(f, serviceProcess("ngxtpl service"))
 
-	if *demoCfg {
-		ngxtpl.CreateDemoCfg("./demo.hcl")
-		os.Exit(0)
-	}
-
-	if *version {
-		fmt.Println("v1.0.1 released at 2020-12-07 16:03:12")
-		os.Exit(0)
-	}
+	ctl.Config{
+		Initing:      *initing,
+		PrintVersion: *version,
+		VersionInfo:  "ngxtpl v1.0.2",
+		ConfTemplate: ngxtpl.ConfBytes,
+		ConfFileName: "demo.hcl",
+	}.ProcessInit()
 
 	if len(*configFiles) == 0 {
 		pflag.PrintDefaults()
@@ -44,10 +43,15 @@ func serviceProcess(desc string) []string {
 		return nil
 	}
 
-	srv, err := daemon.New(os.Args[0], desc, daemon.SystemDaemon)
-	if err != nil {
-		log.Println("Error: ", err)
-		os.Exit(1)
+	var err error
+	var srv daemon.Daemon
+	switch c := os.Args[1]; c {
+	case "install", "remove", "start", "stop", "status":
+		srv, err = daemon.New(os.Args[0], desc, daemon.SystemDaemon)
+		if err != nil {
+			log.Println("Error: ", err)
+			os.Exit(1)
+		}
 	}
 
 	switch c := os.Args[1]; c {
@@ -62,9 +66,7 @@ func serviceProcess(desc string) []string {
 	case "status":
 		exitWithMsg(srv.Status())
 	case "-h":
-		log.Printf("Usage: %s install args... | remove | start | stop | status | run args...", os.Args[0])
-		os.Exit(0)
-		return nil
+		return os.Args
 	}
 
 	return os.Args[1:]

@@ -4,7 +4,7 @@ import (
 	"bytes"
 	"context"
 	"crypto/tls"
-	"database/sql"
+	_ "embed"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -22,26 +22,7 @@ import (
 
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/pflag"
-
-	"github.com/bingoohuang/pkger"
 )
-
-// ReadPkger reads the content of pkger file.
-func ReadPkger(file string) []byte {
-	f, err := pkger.Open(file)
-	if err != nil {
-		panic(err)
-	}
-
-	defer f.Close()
-
-	d, err := ioutil.ReadAll(f)
-	if err != nil {
-		panic(err)
-	}
-
-	return d
-}
 
 // ReadFile reads the file content of file with name filename.
 // or panic if error happens.
@@ -109,49 +90,8 @@ func PflagParse(f *pflag.FlagSet, args []string) {
 	}
 }
 
-// CreateDemoCfg  creates a demo config file with name demoHclFile.
-func CreateDemoCfg(demoHclFile string) {
-	if v, err := os.Stat(demoHclFile); err == nil && !v.IsDir() {
-		fmt.Printf("%s exists already\n", demoHclFile)
-		os.Exit(0)
-	}
-
-	v := ReadPkger(pkger.Include("/assets/cfg.hcl"))
-	if err := ioutil.WriteFile(demoHclFile, v, 0644); err != nil {
-		panic(err)
-	}
-
-	fmt.Printf("%s created\n", demoHclFile)
-}
-
-// QueryRows querys the database and returns a slice of map.
-func QueryRows(db *sql.DB, query string, maxRows int) ([]map[string]interface{}, []string, error) {
-	rows, _ := db.Query(query) // Note: Ignoring errors for brevity
-	defer rows.Close()
-
-	cols, _ := rows.Columns()
-	results := make([]map[string]interface{}, 0)
-	for row := 0; rows.Next() && (maxRows <= 0 || row < maxRows); row++ {
-		columns := make([]string, len(cols))
-		pointers := make([]interface{}, len(cols))
-		for i := range columns {
-			pointers[i] = &columns[i]
-		}
-
-		if err := rows.Scan(pointers...); err != nil {
-			return nil, cols, err
-		}
-
-		m := make(map[string]interface{})
-		for i, colName := range cols {
-			m[colName] = columns[i]
-		}
-
-		results = append(results, m)
-	}
-
-	return results, cols, nil
-}
+//go:embed assets/conf.hcl
+var ConfBytes []byte
 
 // IsHTTPAddress tests whether the string s starts with http:// or https://.
 func IsHTTPAddress(s string) bool {

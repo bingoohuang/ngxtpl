@@ -1,4 +1,4 @@
-FROM golang:1.15.7-alpine3.12
+FROM golang:1.16.2-alpine3.12
 # workspace directory
 WORKDIR /app
 # copy `go.mod` and `go.sum`
