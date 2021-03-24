@@ -75,8 +75,8 @@ func (t *Tpl) Execute(data interface{}, ds DataSource, cfgName string, result *R
 	result.New = string(newContent)
 	result.StatusCode = 200
 
-	logrus.Infof("{PRE}new content %s", result.New)
-	logrus.Infof("{PRE}old content %s", result.Old)
+	logrus.Infof("{PRE}new content:\n%s", result.New)
+	logrus.Infof("{PRE}old content:\n%s", result.Old)
 
 	if err := t.writeDestination(t.Destination, newContent); err != nil {
 		logrus.Errorf("failed to write destination %s err: %v", t.Destination, err)
