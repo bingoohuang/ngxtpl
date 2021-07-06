@@ -14,3 +14,4 @@
 .DS_Store
 /ctl
 /demo.hcl
+/ngxtpl.hcl

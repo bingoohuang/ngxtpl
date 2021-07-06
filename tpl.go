@@ -2,6 +2,7 @@ package ngxtpl
 
 import (
 	"bytes"
+	"embed"
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
@@ -16,6 +17,9 @@ import (
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
 )
+
+//go:embed initassets
+var InitAssets embed.FS
 
 // Tpl represents a tpl config section.
 type Tpl struct {

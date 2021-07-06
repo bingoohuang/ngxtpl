@@ -90,9 +90,6 @@ func PflagParse(f *pflag.FlagSet, args []string) {
 	}
 }
 
-//go:embed assets/conf.hcl
-var ConfBytes []byte
-
 // IsHTTPAddress tests whether the string s starts with http:// or https://.
 func IsHTTPAddress(s string) bool {
 	return HasPrefix(s, "http://", "https://")
