@@ -1,0 +1,34 @@
+# gossh -e=1 -c scripts/rigaga_centos_build.toml at ..
+
+#printConfig = true
+#passphrase="xxxx"
+
+hosts = [
+    "root:{PBE}5bDyuX4uVOA_sOWpmt153ZA-EoilIgE8@192.168.118.75 group=1",
+    "root:{PBE}x8ScQ2JVKbxZAH3PiZMgd6uzkI3J9rX9@124.71.131.248:2182 group=2",
+]
+
+# 全部命令都默认成远程执行，相当于自动添加了%host标识。
+globalRemote = true
+cmdTimeout = "300s"
+# confirm = true
+# exec mode(0: cmd by cmd, 1 host by host).
+execMode = 0
+
+cmds = [
+    "%local date '+%Y%m%d%H%M%S' => @Now",
+    "%local basename $PWD => @App",
+    "%local echo 'github.com/bingoohuang/gg/pkg/v' => @Pkg",
+    "%local git rev-list --oneline --format=format:'%h@%aI' --max-count=1 `git rev-parse HEAD` | tail -1 => @GitCommit",
+    "%local find ./ -name \".DS_Store\" -exec rm -rf '{}' ';'",
+    "%local go mod download && go mod vendor && cd ..", # "go mod vendor -v",
+    "%local rm -fr @App.tar.gz && tar czf @App.tar.gz @App",
+    "%ul @App.tar.gz @App",
+    "cd @App && rm -fr @App && tar zxf @App.tar.gz --warning=no-timestamp --exclude .git && cd @App",
+    "go build -mod vendor -o @App  -ldflags=\"-w -s -X '@Pkg.buildTime=$(date '+%Y-%m-%d %H:%M:%S')' -X @Pkg.appVersion=1.0.4 -X @Pkg.branch=HEAD -X @Pkg.gitCommit=@GitCommit -X '@Pkg.goVersion=$(go version)'\" ./cmd/ngxtpl",
+    "pwd && ls -lh @App && @App --version",
+    "cp @App @App_raw",
+    "pwd && @App --version && ls -lh @App*",
+    "%dl @App/@App/@App @Now/",
+    "%local ls -lhd $PWD/@Now/*",
+]

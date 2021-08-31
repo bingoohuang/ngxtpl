@@ -20,7 +20,6 @@ func main() {
 	ctl.Config{
 		Initing:      *initing,
 		PrintVersion: *version,
-		VersionInfo:  "ngxtpl v1.0.3",
 		InitFiles:    ngxtpl.InitAssets,
 	}.ProcessInit()
 

@@ -52,7 +52,7 @@ func (t Mysql) Get(key string) (string, error) {
 	defer db.Close()
 
 	query := strings.ReplaceAll(t.KVSql, "{{key}}", key)
-	val, err := sqx.SQL{Query: query}.QueryAsString(db)
+	val, err := sqx.SQL{Q: query}.QueryAsString(db)
 	if err != nil {
 		return "", err
 	}
@@ -68,7 +68,7 @@ func (t Mysql) Read() (interface{}, error) {
 
 	defer db.Close()
 
-	result, err := sqx.SQL{Query: t.DataSQL}.QueryAsMaps(db)
+	result, err := sqx.SQL{Q: t.DataSQL}.QueryAsMaps(db)
 	if err != nil {
 		return nil, err
 	}
@@ -115,7 +115,7 @@ func (t Mysql) fulfil(db *sql.DB, m map[string]interface{}) {
 			continue
 		}
 
-		sub, err := sqx.SQL{Query: query}.QueryAsMaps(db)
+		sub, err := sqx.SQL{Q: query}.QueryAsMaps(db)
 		if err != nil {
 			logrus.Warnf("failed to execute sql %s, error: %v", query, err)
 			continue

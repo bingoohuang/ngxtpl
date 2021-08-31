@@ -2,10 +2,19 @@
 all: default
 
 app=$(notdir $(shell pwd))
+goVersion := $(shell go version)
+# echo ${goVersion#go version }
+# strip prefix "go version " from output "go version go1.16.7 darwin/amd64"
+goVersion2 := $(subst go version ,,$(goVersion))
+buildTime := $(shell date '+%Y-%m-%d %H:%M:%S')
 # https://git-scm.com/docs/git-rev-list#Documentation/git-rev-list.txt-emaIem
-COMMIT ?= $(shell git rev-list --oneline --format=format:'%h@%aI' --max-count=1 `git rev-parse HEAD` | tail -1)
-COMMIT = $(shell date  +"%Y-%m-%dT%H:%M:%S%z")
-LDFLAGS ?= -s -w -X github.com/bingoohuang/gg/pkg/ctl.COMMIT=${COMMIT}
+gitCommit := $(shell git rev-list --oneline --format=format:'%h@%aI' --max-count=1 `git rev-parse HEAD` | tail -1)
+#gitCommit := $(shell git rev-list -1 HEAD)
+# https://stackoverflow.com/a/47510909
+pkg := github.com/bingoohuang/gg/pkg/v
+#static := -static
+# https://ms2008.github.io/2018/10/08/golang-build-version/
+flags = "-extldflags $(static) -s -w -X '$(pkg).buildTime=$(buildTime)' -X $(pkg).appVersion=1.0.4 -X $(pkg).gitCommit=$(gitCommit) -X '$(pkg).goVersion=$(goVersion2)'"
 
 default: install
 
@@ -33,11 +42,11 @@ fmt:
 	goimports -w .
 
 install: init
-	go install -ldflags="$(LDFLAGS)" ./...
+	go install -ldflags="$(flags)" ./...
 	ls -lh $$(which ${app})
 
 linux: init
-	GOOS=linux GOARCH=amd64 go install -ldflags="$(LDFLAGS)" ./...
+	GOOS=linux GOARCH=amd64 go install -ldflags="$(flags)" ./...
 	upx ~/go/bin/linux_amd64/${app}
 
 upx:

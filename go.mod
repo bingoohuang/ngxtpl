@@ -3,8 +3,8 @@ module github.com/bingoohuang/ngxtpl
 go 1.16
 
 require (
-	github.com/bingoohuang/gg v0.0.0-20210701041010-ef1cf76a32ef
-	github.com/bingoohuang/golog v0.0.0-20210322080612-784352c5358e
+	github.com/bingoohuang/gg v0.0.0-20210831025745-f2b1b365b604
+	github.com/bingoohuang/golog v0.0.0-20210727011701-2319aa8459ec
 	github.com/go-redis/redis/v8 v8.4.0
 	github.com/go-sql-driver/mysql v1.6.0
 	github.com/go-test/deep v1.0.3 // indirect
