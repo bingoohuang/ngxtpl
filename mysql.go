@@ -2,8 +2,9 @@ package ngxtpl
 
 import (
 	"database/sql"
-	"github.com/bingoohuang/gg/pkg/sqx"
 	"strings"
+
+	"github.com/bingoohuang/gg/pkg/sqx"
 
 	"github.com/sirupsen/logrus"
 

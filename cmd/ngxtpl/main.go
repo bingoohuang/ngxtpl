@@ -1,8 +1,9 @@
 package main
 
 import (
-	"github.com/bingoohuang/gg/pkg/ctl"
 	"os"
+
+	"github.com/bingoohuang/gg/pkg/ctl"
 
 	"github.com/bingoohuang/golog"
 
@@ -17,18 +18,14 @@ func main() {
 	configFiles := f.StringSliceP("conf", "c", []string{"ngxtpl.hcl"}, "config files")
 	ngxtpl.PflagParse(f, os.Args[1:])
 
-	ctl.Config{
-		Initing:      *initing,
-		PrintVersion: *version,
-		InitFiles:    ngxtpl.InitAssets,
-	}.ProcessInit()
+	ctl.Config{Initing: *initing, PrintVersion: *version, InitFiles: &ngxtpl.InitAssets}.ProcessInit()
 
 	if len(*configFiles) == 0 {
 		pflag.PrintDefaults()
 		return
 	}
 
-	golog.SetupLogrus()
+	golog.Setup()
 	tpls := ngxtpl.DecodeCfgFiles(*configFiles)
 	tpls.Run()
 }

@@ -169,7 +169,7 @@ func (t *Tpl) parseDestination() (err error) {
 	if t.Destination == "" {
 		return nil
 	}
-	t.Perms = ZeroTo(t.Perms, 0644)
+	t.Perms = ZeroTo(t.Perms, 0o644)
 
 	dir := filepath.Dir(t.Destination)
 	if _, err = os.Stat(dir); err == nil {

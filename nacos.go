@@ -161,7 +161,6 @@ type ClientConfig struct {
 	Username             string `hcl:"Username"`             // the username for nacos auth
 	Password             string `hcl:"Password"`             // the password for nacos auth
 	LogDir               string `hcl:"LogDir"`               // the directory for log, default is current path
-	RotateTime           string `hcl:"RotateTime"`           // the rotate time for log, eg: 30m, 1h, 24h, default is 24h
 	MaxAge               int    `hcl:"MaxAge"`               // the max age of a log file, default value is 3
 	LogLevel             string `hcl:"LogLevel"`             // the level of log, it's must be debug,info,warn,error, default value is info
 }
@@ -210,8 +209,10 @@ func (s ClientConfig) toNacosConfig() constant.ClientConfig {
 		Username:             s.Username,
 		Password:             s.Password,
 		LogDir:               s.LogDir,
-		RotateTime:           s.RotateTime,
-		MaxAge:               int64(s.MaxAge),
-		LogLevel:             s.LogLevel,
+		LogRollingConfig: &constant.ClientLogRollingConfig{
+			MaxAge: s.MaxAge,
+		},
+
+		LogLevel: s.LogLevel,
 	}
 }
