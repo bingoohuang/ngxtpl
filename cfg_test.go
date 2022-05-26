@@ -9,7 +9,7 @@ import (
 )
 
 func TestCfgParse(t *testing.T) {
-	s, err := ngxtpl.ReadFileE("assets/conf.hcl")
+	s, err := ngxtpl.ReadFileE("initassets/ngxtpl.hcl")
 	assert.Nil(t, err)
 
 	var cfg ngxtpl.Cfg
