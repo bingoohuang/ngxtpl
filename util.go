@@ -4,11 +4,11 @@ import (
 	"bytes"
 	"context"
 	"crypto/tls"
-	_ "embed"
 	"encoding/json"
 	"fmt"
 	"io"
 	"io/ioutil"
+	"log"
 	"net/http"
 	"os"
 	"os/signal"
@@ -20,7 +20,6 @@ import (
 
 	"github.com/pkg/errors"
 
-	"github.com/sirupsen/logrus"
 	"github.com/spf13/pflag"
 )
 
@@ -84,7 +83,7 @@ func PflagParse(f *pflag.FlagSet, args []string) {
 	f.Parse(args)
 
 	if f.NArg() > 0 {
-		logrus.Errorf("Unknown args %s\n", strings.Join(f.Args(), " "))
+		log.Printf("E! Unknown args %s\n", strings.Join(f.Args(), " "))
 		f.PrintDefaults()
 		os.Exit(-1)
 	}

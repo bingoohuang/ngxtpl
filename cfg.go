@@ -1,6 +1,8 @@
 package ngxtpl
 
 import (
+	"log"
+
 	"github.com/hashicorp/hcl"
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
@@ -120,16 +122,16 @@ func DecodeCfgFiles(cfgFiles []string) (cfgs Cfgs) {
 func (c Cfg) Run() {
 	defer c.Tpl.resetTicker()
 
-	logrus.Infof("Start to run config file %s", c.name)
+	log.Printf("Start to run config file %s", c.name)
 	m, err := c.dataSource.Read()
 	if err != nil {
-		logrus.Warnf("failed to read template data: %v", err)
+		log.Printf("W! failed to read template data: %v", err)
 		return
 	}
 
 	result := Result{}
 	if err := c.Tpl.Execute(m, c.dataSource, c.name, &result); err != nil {
-		logrus.Warnf("failed to execute tpl: %v", err)
+		log.Printf("W! failed to execute tpl: %v", err)
 		result.StatusCode = 400
 		result.Error = err.Error()
 	}
@@ -154,7 +156,7 @@ func (c Cfgs) Run() {
 	}
 
 	if len(loopCfgs) == 0 {
-		logrus.Infof("finished")
+		log.Printf("finished")
 		return
 	}
 

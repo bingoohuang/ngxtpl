@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
+	"log"
 	"os"
 	"path/filepath"
 	"strconv"
@@ -13,11 +14,14 @@ import (
 	"text/template"
 	"time"
 
+	"github.com/bingoohuang/gg/pkg/codec"
+	"github.com/bingoohuang/gg/pkg/iox"
+
 	"github.com/gobars/cmd"
 	"github.com/pkg/errors"
-	"github.com/sirupsen/logrus"
 )
 
+// InitAssets gives the initial assets for the program initialization.
 //go:embed initassets
 var InitAssets embed.FS
 
@@ -54,11 +58,19 @@ func (t *Tpl) Execute(data interface{}, ds DataSource, cfgName string, result *R
 
 	source, err := template.New("TplSource").Parse(sourceContent)
 	if err != nil {
+		if t := iox.WriteTempFile(iox.WithTempContent([]byte(sourceContent))); t.Err == nil {
+			log.Printf("parse template %s failed: %v", t.Name, err)
+		}
 		return errors.Wrapf(ErrCfg, "TplSource is invalid. "+
 			"it should be a template file or direct template content string")
 	}
 
 	if err := source.Execute(&out, data); err != nil {
+		t1 := iox.WriteTempFile(iox.WithTempContent([]byte(sourceContent)))
+		t2 := iox.WriteTempFile(iox.WithTempContent(codec.Json(data)))
+		if t1.Err == nil && t2.Err == nil {
+			log.Printf("evaluting template %s with data %s failed: %v", t1.Name, t2.Name, err)
+		}
 		return err
 	}
 
@@ -71,7 +83,7 @@ func (t *Tpl) Execute(data interface{}, ds DataSource, cfgName string, result *R
 	result.Old = string(oldContent)
 	if bytes.Equal(newContent, oldContent) {
 		result.StatusCode = 304
-		logrus.Infof("nothing changed for config file: %s", cfgName)
+		log.Printf("nothing changed for config file: %s", cfgName)
 		return nil
 	}
 
@@ -79,11 +91,11 @@ func (t *Tpl) Execute(data interface{}, ds DataSource, cfgName string, result *R
 	result.New = string(newContent)
 	result.StatusCode = 200
 
-	logrus.Infof("{PRE}new content:\n%s", result.New)
-	logrus.Infof("{PRE}old content:\n%s", result.Old)
+	log.Printf("{PRE}new content:\n%s", result.New)
+	log.Printf("{PRE}old content:\n%s", result.Old)
 
 	if err := t.writeDestination(t.Destination, newContent); err != nil {
-		logrus.Errorf("failed to write destination %s err: %v", t.Destination, err)
+		log.Printf("E! failed to write destination %s err: %v", t.Destination, err)
 		return err
 	}
 
@@ -208,7 +220,7 @@ func (t *Tpl) writeDestination(destination string, content []byte) error {
 			return err
 		}
 
-		logrus.Infof("POST %s response %s", destination, string(resp))
+		log.Printf("POST %s response %s", destination, string(resp))
 		return nil
 	}
 
@@ -252,17 +264,17 @@ func Sh(bash string) (*cmd.Cmd, cmd.Status) {
 func executeCommand(command, check string) (*CommandResult, bool) {
 	_, status := Sh(command)
 	if status.Exit == 0 {
-		logrus.Infof("exec command %s successfully", command)
+		log.Printf("exec command %s successfully", command)
 	} else {
-		logrus.Infof("exec command %s failed with exit code %d", command, status.Exit)
+		log.Printf("exec command %s failed with exit code %d", command, status.Exit)
 	}
 
 	if len(status.Stdout) > 0 {
-		logrus.Infof("%s", strings.Join(status.Stdout, "\n"))
+		log.Printf("%s", strings.Join(status.Stdout, "\n"))
 	}
 
 	if len(status.Stderr) > 0 {
-		logrus.Errorf("%s", strings.Join(status.Stderr, "\n"))
+		log.Printf("E! %s", strings.Join(status.Stderr, "\n"))
 	}
 
 	if check == "" && status.Exit == 0 ||

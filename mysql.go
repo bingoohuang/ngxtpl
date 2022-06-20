@@ -2,11 +2,10 @@ package ngxtpl
 
 import (
 	"database/sql"
+	"log"
 	"strings"
 
 	"github.com/bingoohuang/gg/pkg/sqx"
-
-	"github.com/sirupsen/logrus"
 
 	// import mysql driver
 	_ "github.com/go-sql-driver/mysql"
@@ -85,6 +84,7 @@ func (t Mysql) Read() (interface{}, error) {
 	return out, nil
 }
 
+// ConvertToMapInterfaceSlice convert slice of map[string]interface{} to slice of map[string]interface{}.
 func ConvertToMapInterfaceSlice(m []map[string]string) []map[string]interface{} {
 	vv := make([]map[string]interface{}, len(m))
 
@@ -95,6 +95,7 @@ func ConvertToMapInterfaceSlice(m []map[string]string) []map[string]interface{} 
 	return vv
 }
 
+// ConvertToMapInterface converts map[string]string to map[string]interface{}.
 func ConvertToMapInterface(v map[string]string) map[string]interface{} {
 	m := make(map[string]interface{})
 	for k, v := range v {
@@ -112,13 +113,13 @@ func (t Mysql) fulfil(db *sql.DB, m map[string]interface{}) {
 
 		query, err := TemplateEval(queryTemplate, m)
 		if err != nil {
-			logrus.Warnf("failed to execute template %s, error: %v", queryTemplate, err)
+			log.Printf("W! failed to execute template %s, error: %v", queryTemplate, err)
 			continue
 		}
 
 		sub, err := sqx.SQL{Q: query}.QueryAsMaps(db)
 		if err != nil {
-			logrus.Warnf("failed to execute sql %s, error: %v", query, err)
+			log.Printf("W! failed to execute sql %s, error: %v", query, err)
 			continue
 		}
 

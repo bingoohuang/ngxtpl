@@ -3,6 +3,7 @@ package ngxtpl
 import (
 	"context"
 	"encoding/json"
+	"github.com/bingoohuang/gg/pkg/iox"
 	"strings"
 	"time"
 
@@ -22,7 +23,7 @@ type Redis struct {
 // Get gets the value of key from redis.
 func (r Redis) Get(key string) (string, error) {
 	rdb := redis.NewClient(&redis.Options{Addr: r.Addr, Password: r.Password, DB: r.Db})
-	defer rdb.Close()
+	defer iox.Close(rdb)
 
 	ctx := context.Background()
 
@@ -37,10 +38,10 @@ func (r Redis) Get(key string) (string, error) {
 	return rdb.Get(ctx, key).Result()
 }
 
-// Write write key and it's value to redis.
+// Write writes key and it's value to redis.
 func (r Redis) Write(key, value string) (err error) {
 	rdb := redis.NewClient(&redis.Options{Addr: r.Addr, Password: r.Password, DB: r.Db})
-	defer rdb.Close()
+	defer iox.Close(rdb)
 
 	ctx := context.Background()
 
@@ -56,7 +57,7 @@ func (r Redis) Write(key, value string) (err error) {
 	return err
 }
 
-// WriteError writes error.
+// WriteResult writes error.
 func (r Redis) WriteResult(result Result) error {
 	if r.ResultKey == "" {
 		return nil
@@ -77,7 +78,7 @@ func (r Redis) Read() (interface{}, error) {
 	return JSONDecode(v)
 }
 
-// Parse parse the redis config.
+// Parse parses the redis config.
 func (r *Redis) Parse() (DataSource, error) {
 	if r.ServicesKey == "" {
 		return nil, errors.Wrapf(ErrCfg, "ServicesKey is required")
