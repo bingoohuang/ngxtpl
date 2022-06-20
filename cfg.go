@@ -11,6 +11,7 @@ type KeyWriter interface {
 	Write(key, value string) error
 }
 
+// Result ...
 type Result struct {
 	Time       string `json:"time"`
 	Old        string `json:"old,omitempty"`
