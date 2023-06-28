@@ -11,18 +11,19 @@ import (
 	"github.com/nacos-group/nacos-sdk-go/common/constant"
 	"github.com/nacos-group/nacos-sdk-go/model"
 	"github.com/nacos-group/nacos-sdk-go/vo"
+	"gopkg.in/natefinch/lumberjack.v2"
 )
 
 // https://github.com/nacos-group/nacos-sdk-go
 
 // Nacos represents the structure of Nacos config.
 type Nacos struct {
-	ClientConfig  ClientConfig  `hcl:"clientConfig"`
-	ServerConfigs ServerConfigs `hcl:"serverConfigs"`
-	ServiceParam  ServiceParam  `hcl:"serviceParam"`
-
 	namingClient naming_client.INamingClient
 	configClient config_client.IConfigClient
+	ServiceParam ServiceParam `hcl:"serviceParam"`
+
+	ServerConfigs ServerConfigs `hcl:"serverConfigs"`
+	ClientConfig  ClientConfig  `hcl:"clientConfig"`
 }
 
 // Get gets the value of key from mysql.
@@ -128,9 +129,9 @@ func (n *Nacos) Parse() (DataSource, error) {
 
 // ServiceParam map config for service discovery.
 type ServiceParam struct {
-	Clusters    []string `hcl:"Clusters"`    // optional,default:DEFAULT
 	ServiceName string   `hcl:"ServiceName"` // required
 	GroupName   string   `hcl:"GroupName"`   // optional,default:DEFAULT_GROUP
+	Clusters    []string `hcl:"Clusters"`    // optional,default:DEFAULT
 }
 
 // ServerConfig defines the config to nacos server.
@@ -146,23 +147,23 @@ type ServerConfigs []ServerConfig
 
 // ClientConfig defines the structure of config of nacos client.
 type ClientConfig struct {
-	TimeoutMs            int    `hcl:"TimeoutMs"`            // timeout for requesting Nacos server, default value is 10000ms
-	BeatInterval         int    `hcl:"BeatInterval"`         // the time interval for sending beat to server,default value is 5000ms
-	NamespaceID          string `hcl:"NamespaceId"`          // the namespaceId of Nacos
-	Endpoint             string `hcl:"Endpoint"`             // the endpoint for get Nacos server addresses
+	CacheDir             string `hcl:"CacheDir"`             // the directory for persist nacos service info,default value is current path
 	RegionID             string `hcl:"RegionId"`             // the regionId for kms
+	LogLevel             string `hcl:"LogLevel"`             // the level of log, it's must be debug,info,warn,error, default value is info
+	Endpoint             string `hcl:"Endpoint"`             // the endpoint for get Nacos server addresses
+	LogDir               string `hcl:"LogDir"`               // the directory for log, default is current path
 	AccessKey            string `hcl:"AccessKey"`            // the AccessKey for kms
 	SecretKey            string `hcl:"SecretKey"`            // the SecretKey for kms
-	OpenKMS              bool   `hcl:"OpenKMS"`              // it's to open kms,default is false. https://help.aliyun.com/product/28933.html
-	CacheDir             string `hcl:"CacheDir"`             // the directory for persist nacos service info,default value is current path
-	UpdateThreadNum      int    `hcl:"UpdateThreadNum"`      // the number of goroutine for update nacos service info,default value is 20
-	NotLoadCacheAtStart  bool   `hcl:"NotLoadCacheAtStart"`  // not to load persistent nacos service info in CacheDir at start time
-	UpdateCacheWhenEmpty bool   `hcl:"UpdateCacheWhenEmpty"` // update cache when get empty service instance from server
-	Username             string `hcl:"Username"`             // the username for nacos auth
 	Password             string `hcl:"Password"`             // the password for nacos auth
-	LogDir               string `hcl:"LogDir"`               // the directory for log, default is current path
+	NamespaceID          string `hcl:"NamespaceId"`          // the namespaceId of Nacos
+	Username             string `hcl:"Username"`             // the username for nacos auth
+	BeatInterval         int    `hcl:"BeatInterval"`         // the time interval for sending beat to server,default value is 5000ms
+	UpdateThreadNum      int    `hcl:"UpdateThreadNum"`      // the number of goroutine for update nacos service info,default value is 20
 	MaxAge               int    `hcl:"MaxAge"`               // the max age of a log file, default value is 3
-	LogLevel             string `hcl:"LogLevel"`             // the level of log, it's must be debug,info,warn,error, default value is info
+	TimeoutMs            int    `hcl:"TimeoutMs"`            // timeout for requesting Nacos server, default value is 10000ms
+	OpenKMS              bool   `hcl:"OpenKMS"`              // it's to open kms,default is false. https://help.aliyun.com/product/28933.html
+	UpdateCacheWhenEmpty bool   `hcl:"UpdateCacheWhenEmpty"` // update cache when get empty service instance from server
+	NotLoadCacheAtStart  bool   `hcl:"NotLoadCacheAtStart"`  // not to load persistent nacos service info in CacheDir at start time
 }
 
 func (s ServiceParam) toNacosConfig() vo.GetServiceParam {
@@ -209,7 +210,7 @@ func (s ClientConfig) toNacosConfig() constant.ClientConfig {
 		Username:             s.Username,
 		Password:             s.Password,
 		LogDir:               s.LogDir,
-		LogRollingConfig: &constant.ClientLogRollingConfig{
+		LogRollingConfig: &lumberjack.Logger{
 			MaxAge: s.MaxAge,
 		},
 

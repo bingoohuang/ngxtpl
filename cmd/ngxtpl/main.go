@@ -4,9 +4,7 @@ import (
 	"os"
 
 	"github.com/bingoohuang/gg/pkg/ctl"
-
 	"github.com/bingoohuang/golog"
-
 	"github.com/bingoohuang/ngxtpl"
 	"github.com/spf13/pflag"
 )

@@ -3,10 +3,10 @@ package ngxtpl
 import (
 	"context"
 	"encoding/json"
-	"github.com/bingoohuang/gg/pkg/iox"
 	"strings"
 	"time"
 
+	"github.com/bingoohuang/gg/pkg/iox"
 	"github.com/go-redis/redis/v8"
 	"github.com/pkg/errors"
 )
@@ -15,9 +15,9 @@ import (
 type Redis struct {
 	Addr        string `hcl:"addr"`
 	Password    string `hcl:"password"`
-	Db          int    `hcl:"db"`
 	ServicesKey string `hcl:"servicesKey"`
 	ResultKey   string `hcl:"resultKey"`
+	Db          int    `hcl:"db"`
 }
 
 // Get gets the value of key from redis.

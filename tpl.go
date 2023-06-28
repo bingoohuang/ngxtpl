@@ -16,24 +16,24 @@ import (
 
 	"github.com/bingoohuang/gg/pkg/codec"
 	"github.com/bingoohuang/gg/pkg/iox"
-
 	"github.com/gobars/cmd"
 	"github.com/pkg/errors"
 )
 
 // InitAssets gives the initial assets for the program initialization.
+//
 //go:embed initassets
 var InitAssets embed.FS
 
 // Tpl represents a tpl config section.
 type Tpl struct {
+	ticker      *time.Ticker
 	DataSource  string `hcl:"dataSource"`
 	Interval    string `hcl:"interval"`
 	TplSource   string `hcl:"tplSource"`
 	Destination string `hcl:"destination"`
 	// 执行命令（包括测试命令）失败时，写入导致失败的内容
 	FailedDestination string `hcl:"failDestination"`
-	Perms             int    `hcl:"perms"`
 	// 测试命令
 	TestCommand string `hcl:"testCommand"`
 	// 测试命令执行结果检查，例如有OK字眼，不配置，则只检测测试命令的执行状态
@@ -43,8 +43,9 @@ type Tpl struct {
 	// 结果检查，例如有OK字眼，不配置，则只检测测试命令的执行状态ß
 	CommandCheck string `hcl:"commandCheck"`
 
+	Perms int `hcl:"perms"`
+
 	interval time.Duration
-	ticker   *time.Ticker
 }
 
 // Execute executes the template.
@@ -249,10 +250,10 @@ func (t *Tpl) executeCommand() error {
 
 // CommandResult is the result of command execution.
 type CommandResult struct {
-	ExitCode  int    `json:"exitCode"`
+	ExecError error  `json:"execError"`
 	Stdout    string `json:"stdout"`
 	Stderr    string `json:"stderr"`
-	ExecError error  `json:"execError"`
+	ExitCode  int    `json:"exitCode"`
 }
 
 // Sh executes a bash scripts.
@@ -302,7 +303,7 @@ func SliceContains(ss []string, sub string) bool {
 	return false
 }
 
-//  MapInt returns the int value associated with given key in the map.
+// MapInt returns the int value associated with given key in the map.
 func MapInt(m map[string]interface{}, key string, defaultValue int) int {
 	if len(m) == 0 {
 		return defaultValue
@@ -316,7 +317,7 @@ func MapInt(m map[string]interface{}, key string, defaultValue int) int {
 	return int(f)
 }
 
-//  MapStr returns the string value associated with given key in the map.
+// MapStr returns the string value associated with given key in the map.
 func MapStr(m map[string]interface{}, key, defaultValue string) string {
 	if len(m) == 0 {
 		return defaultValue

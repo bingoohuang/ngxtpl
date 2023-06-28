@@ -6,7 +6,6 @@ import (
 	"strings"
 
 	"github.com/bingoohuang/gg/pkg/sqx"
-
 	// import mysql driver
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/pkg/errors"

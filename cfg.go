@@ -53,14 +53,14 @@ func (h HTTPSource) Read() (interface{}, error) {
 
 // Cfg represents the root structure of the config.
 type Cfg struct {
-	Redis *Redis `hcl:"redis"`
-	Mysql *Mysql `hcl:"mysql"`
-	Nacos *Nacos `hcl:"nacos"`
+	dataSource DataSource
+	Redis      *Redis `hcl:"redis"`
+	Mysql      *Mysql `hcl:"mysql"`
+	Nacos      *Nacos `hcl:"nacos"`
+
+	name string
 
 	Tpl Tpl `hcl:"tpl"`
-
-	dataSource DataSource
-	name       string
 }
 
 // Parse parses the config.
@@ -84,15 +84,16 @@ func (c *Cfg) parseDataSource() (err error) {
 	case "nacos":
 		c.dataSource, err = c.Nacos.Parse()
 	default:
-		if IsHTTPAddress(v) {
+		switch {
+		case IsHTTPAddress(v):
 			c.dataSource, err = &HTTPSource{Address: v}, nil
-		} else if c.Redis != nil {
+		case c.Redis != nil:
 			c.dataSource, err = c.Redis.Parse()
-		} else if c.Mysql != nil {
+		case c.Mysql != nil:
 			c.dataSource, err = c.Mysql.Parse()
-		} else if c.Nacos != nil {
+		case c.Nacos != nil:
 			c.dataSource, err = c.Nacos.Parse()
-		} else {
+		default:
 			err = errors.Wrapf(ErrCfg, "Unknown dataSource %s", c.Tpl.DataSource)
 		}
 	}
