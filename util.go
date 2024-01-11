@@ -7,7 +7,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"log"
 	"net/http"
 	"os"
@@ -35,7 +34,7 @@ func ReadFile(filename string) []byte {
 
 // ReadFileE reads the file content of file with name filename.
 func ReadFileE(filename string) ([]byte, error) {
-	d, err := ioutil.ReadFile(filename)
+	d, err := os.ReadFile(filename)
 	if err != nil {
 		return nil, err
 	}
@@ -45,7 +44,7 @@ func ReadFileE(filename string) ([]byte, error) {
 
 // ReadFileStrE reads the file content of file with name filename.
 func ReadFileStrE(filename string) (string, error) {
-	d, err := ioutil.ReadFile(filename)
+	d, err := os.ReadFile(filename)
 	if err != nil {
 		return "", err
 	}
@@ -53,12 +52,12 @@ func ReadFileStrE(filename string) (string, error) {
 	return string(d), nil
 }
 
-// SetupSingals setup the signal.
+// SetupSingals setups the signal.
 func SetupSingals(sig ...os.Signal) context.Context {
 	return SetupSingalsWithContext(context.Background(), sig...)
 }
 
-// SetupSingalsWithContext setup the signal.
+// SetupSingalsWithContext setups the signal.
 func SetupSingalsWithContext(parent context.Context, sig ...os.Signal) context.Context {
 	ch := make(chan os.Signal, 1)
 	ctx, cancel := context.WithCancel(parent)
@@ -145,7 +144,7 @@ func HTTPInvoke(method, addr string, body []byte) ([]byte, error) {
 	defer resp.Body.Close()
 
 	if resp.StatusCode >= 200 && resp.StatusCode < 300 {
-		return ioutil.ReadAll(resp.Body)
+		return io.ReadAll(resp.Body)
 	}
 
 	return nil, errors.Wrapf(err, "status:%d", resp.StatusCode)

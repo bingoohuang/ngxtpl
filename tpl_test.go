@@ -5,7 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"html/template"
-	"io/ioutil"
+	"os"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -70,7 +70,7 @@ func TestMapArg(t *testing.T) {
 
 func TestUpstreamsTemplate(t *testing.T) {
 	tmpl := template.New("upstreams")
-	tmplText, err := ioutil.ReadFile("testdata/test_upstreams.tpl")
+	tmplText, err := os.ReadFile("testdata/test_upstreams.tpl")
 	assert.Nil(t, err)
 
 	tmpl, err = tmpl.Parse(string(tmplText))
@@ -191,7 +191,7 @@ upstream service2 {
 
 func TestLocationsTemplate(t *testing.T) {
 	tmpl := template.New("locations")
-	tmplText, err := ioutil.ReadFile("testdata/locations.tpl")
+	tmplText, err := os.ReadFile("testdata/locations.tpl")
 	assert.Nil(t, err)
 
 	tmpl, err = tmpl.Parse(string(tmplText))

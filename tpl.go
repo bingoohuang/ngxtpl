@@ -5,7 +5,6 @@ import (
 	"embed"
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
 	"log"
 	"os"
 	"path/filepath"
@@ -225,7 +224,7 @@ func (t *Tpl) writeDestination(destination string, content []byte) error {
 		return nil
 	}
 
-	return ioutil.WriteFile(destination, content, os.FileMode(t.Perms))
+	return os.WriteFile(destination, content, os.FileMode(t.Perms))
 }
 
 func (t *Tpl) executeCommand() error {
