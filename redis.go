@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/bingoohuang/gg/pkg/iox"
+	"github.com/bingoohuang/gg/pkg/ss"
 	"github.com/go-redis/redis/v8"
 	"github.com/pkg/errors"
 )
@@ -17,12 +18,12 @@ type Redis struct {
 	Password    string `hcl:"password"`
 	ServicesKey string `hcl:"servicesKey"`
 	ResultKey   string `hcl:"resultKey"`
-	Db          int    `hcl:"db"`
 }
 
 // Get gets the value of key from redis.
 func (r Redis) Get(key string) (string, error) {
-	rdb := redis.NewClient(&redis.Options{Addr: r.Addr, Password: r.Password, DB: r.Db})
+	addrs := ss.Split(r.Addr)
+	rdb := redis.NewClusterClient(&redis.ClusterOptions{Addrs: addrs, Password: r.Password})
 	defer iox.Close(rdb)
 
 	ctx := context.Background()
@@ -40,7 +41,8 @@ func (r Redis) Get(key string) (string, error) {
 
 // Write writes key and it's value to redis.
 func (r Redis) Write(key, value string) (err error) {
-	rdb := redis.NewClient(&redis.Options{Addr: r.Addr, Password: r.Password, DB: r.Db})
+	addrs := ss.Split(r.Addr)
+	rdb := redis.NewClusterClient(&redis.ClusterOptions{Addrs: addrs, Password: r.Password})
 	defer iox.Close(rdb)
 
 	ctx := context.Background()
