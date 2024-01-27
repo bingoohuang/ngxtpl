@@ -18,14 +18,13 @@ type Redis struct {
 	Password    string `hcl:"password"`
 	ServicesKey string `hcl:"servicesKey"`
 	ResultKey   string `hcl:"resultKey"`
+	Cluster     bool   `hcl:"cluster"`
 }
 
 // Get gets the value of key from redis.
 func (r Redis) Get(key string) (string, error) {
-	addrs := ss.Split(r.Addr)
-	rdb := redis.NewClusterClient(&redis.ClusterOptions{Addrs: addrs, Password: r.Password})
+	rdb := r.createClient()
 	defer iox.Close(rdb)
-
 	ctx := context.Background()
 
 	const sep = " "
@@ -39,10 +38,19 @@ func (r Redis) Get(key string) (string, error) {
 	return rdb.Get(ctx, key).Result()
 }
 
+func (r Redis) createClient() redis.UniversalClient {
+	if r.Cluster {
+		addrs := ss.Split(r.Addr)
+		return redis.NewClusterClient(&redis.ClusterOptions{Addrs: addrs, Password: r.Password})
+	}
+
+	return redis.NewClient(&redis.Options{Addr: r.Addr, Password: r.Password})
+}
+
 // Write writes key and it's value to redis.
 func (r Redis) Write(key, value string) (err error) {
-	addrs := ss.Split(r.Addr)
-	rdb := redis.NewClusterClient(&redis.ClusterOptions{Addrs: addrs, Password: r.Password})
+	rdb := r.createClient()
+	defer iox.Close(rdb)
 	defer iox.Close(rdb)
 
 	ctx := context.Background()
