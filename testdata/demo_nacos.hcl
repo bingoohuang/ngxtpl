@@ -1,24 +1,5 @@
 nacos {
-  clientConfig {
-    NamespaceId = "f3c0ab89-31bb-4414-a495-146941316751"
-    TimeoutMs = 5000
-    NotLoadCacheAtStart = true
-    LogDir = "/tmp/nacos/log"
-    CacheDir = "/tmp/nacos/cache"
-    RotateTime = "1h"
-    MaxAge = 3
-    LogLevel = "debug"
-  }
-
-  serverConfigs = [
-    {
-      Scheme = "http"
-      IpAddr = "127.0.0.1"
-      Port = 8848
-      ContextPath = "/nacos"
-    }
-  ]
-
+  configFile = "nacos.yaml"
   serviceParam {
     ServiceName = "demogo",
     Clusters = ["clustera"]

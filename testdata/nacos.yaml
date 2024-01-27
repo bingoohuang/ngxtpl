@@ -1,0 +1,57 @@
+---
+# 服务器配置
+ServerConfigs:
+  - IpAddr: 127.0.0.1
+    GrpcPort: 9848
+
+# 客户端配置
+ClientConfig:
+  NamespaceId: 281c27a2-9bf7-4068-81f3-59afd304fc75  # the namespaceId of Nacos.When namespace is public, fill in the blank string here.
+  NotLoadCacheAtStart: true  # not to load persistent nacos service info in CacheDir at start time
+  # TimeoutMs:            # timeout for requesting Nacos server, default value is 10000ms
+  # BeatInterval:         # the time interval for sending beat to server,default value is 5000ms
+  # AppName:              # the appName
+  # AppKey:               # the client identity information
+  # Endpoint:             # the endpoint for get Nacos server addresses
+  # RegionId:             # the regionId for kms
+  # AccessKey:            # the AccessKey for kms
+  # SecretKey:            # the SecretKey for kms
+  # CacheDir:             # the directory for persist nacos service info,default value is current path
+  # DisableUseSnapShot:   # It's a switch, default is false, means that when get remote config fail, use local cache file instead
+  # UpdateThreadNum:      # the number of goroutine for update nacos service info,default value is 20
+  # UpdateCacheWhenEmpty: # update cache when get empty service instance from server
+  # Username:             # the username for nacos auth
+  # Password:             # the password for nacos auth
+  # LogDir:               # the directory for log, default is current path
+  # LogLevel:             # the level of log, it's must be debug,info,warn,error, default value is info
+  # ContextPath:          # the nacos server contextpath
+  # AppendToStdout:       # if append log to stdout
+  # AsyncUpdateService:   # open async update service by query
+  # EndpointContextPath:  # the address server  endpoint contextPath
+  # EndpointQueryParams:  # the address server  endpoint query params
+  # ClusterName:          # the address server  clusterName
+
+
+# 1. nacos 读取指定 Group.DataId 的 配置 用于 RegisterInstanceParam 模板
+RegisterParam:
+  Group: ngxtpl
+  DataId: RegisterParam
+
+# 2. 或者直接在此配置 RegisterInstanceParam 模板
+
+# RegisterInstanceParam:
+# # ngxtpl 启动时，向 nacos 注册自身的信息模板
+# Ip: "{{.Ip}}"
+# Port: 8848
+# ServiceName: ngxtpl
+# Weight: 10
+# Enable: true
+# Healthy: true
+# Ephemeral: true
+# Metadata:
+#   ips: "{{.Ips}}"
+#   hostname: "{{.Hostname}}"
+#   pid: "{{.Pid}}"
+#   registerTime: "{{.RegisterTime}}"
+# ClusterName: ngxtpl
+# GroupName: ngxtpl

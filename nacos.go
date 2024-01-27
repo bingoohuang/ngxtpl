@@ -1,29 +1,34 @@
 package ngxtpl
 
 import (
+	"bytes"
 	"encoding/json"
 	"fmt"
+	"github.com/bingoohuang/gg/pkg/goip"
+	"github.com/goccy/go-yaml"
+	"github.com/nacos-group/nacos-sdk-go/v2/clients"
+	"github.com/nacos-group/nacos-sdk-go/v2/clients/config_client"
+	"github.com/nacos-group/nacos-sdk-go/v2/clients/naming_client"
+	"github.com/nacos-group/nacos-sdk-go/v2/common/constant"
+	"github.com/nacos-group/nacos-sdk-go/v2/common/logger"
+	"github.com/nacos-group/nacos-sdk-go/v2/model"
+	"github.com/nacos-group/nacos-sdk-go/v2/vo"
+	"log"
+	"os"
 	"strings"
-
-	"github.com/nacos-group/nacos-sdk-go/clients"
-	"github.com/nacos-group/nacos-sdk-go/clients/config_client"
-	"github.com/nacos-group/nacos-sdk-go/clients/naming_client"
-	"github.com/nacos-group/nacos-sdk-go/common/constant"
-	"github.com/nacos-group/nacos-sdk-go/model"
-	"github.com/nacos-group/nacos-sdk-go/vo"
-	"gopkg.in/natefinch/lumberjack.v2"
+	"text/template"
+	"time"
 )
 
 // https://github.com/nacos-group/nacos-sdk-go
 
 // Nacos represents the structure of Nacos config.
 type Nacos struct {
-	namingClient naming_client.INamingClient
-	configClient config_client.IConfigClient
+	ConfigFile   string       `hcl:"configFile"`
 	ServiceParam ServiceParam `hcl:"serviceParam"`
 
-	ServerConfigs ServerConfigs `hcl:"serverConfigs"`
-	ClientConfig  ClientConfig  `hcl:"clientConfig"`
+	namingClient naming_client.INamingClient
+	configClient config_client.IConfigClient
 }
 
 // Get gets the value of key from mysql.
@@ -107,24 +112,11 @@ func createUpstreamHost(s model.Instance) map[string]interface{} {
 
 // Parse parses the nacos config.
 func (n *Nacos) Parse() (DataSource, error) {
-	// Create config client for dynamic configuration
-	p := map[string]interface{}{
-		"serverConfigs": n.ServerConfigs.toNacosConfig(),
-		"clientConfig":  n.ClientConfig.toNacosConfig(),
-	}
-
-	var err error
-
-	if n.configClient, err = clients.CreateConfigClient(p); err != nil {
+	if err := n.loadNaocsClient(n.ConfigFile); err != nil {
 		return nil, err
 	}
 
-	// Create naming client for service discovery
-	if n.namingClient, err = clients.CreateNamingClient(p); err != nil {
-		return nil, err
-	}
-
-	return n, err
+	return n, nil
 }
 
 // ServiceParam map config for service discovery.
@@ -132,38 +124,6 @@ type ServiceParam struct {
 	ServiceName string   `hcl:"ServiceName"` // required
 	GroupName   string   `hcl:"GroupName"`   // optional,default:DEFAULT_GROUP
 	Clusters    []string `hcl:"Clusters"`    // optional,default:DEFAULT
-}
-
-// ServerConfig defines the config to nacos server.
-type ServerConfig struct {
-	Scheme      string `hcl:"Scheme"`      // the nacos server scheme
-	ContextPath string `hcl:"ContextPath"` // the nacos server contextpath
-	IPAddr      string `hcl:"IpAddr"`      // the nacos server address
-	Port        int    `hcl:"Port"`        // the nacos server port
-}
-
-// ServerConfigs is alias of service config slice.
-type ServerConfigs []ServerConfig
-
-// ClientConfig defines the structure of config of nacos client.
-type ClientConfig struct {
-	CacheDir             string `hcl:"CacheDir"`             // the directory for persist nacos service info,default value is current path
-	RegionID             string `hcl:"RegionId"`             // the regionId for kms
-	LogLevel             string `hcl:"LogLevel"`             // the level of log, it's must be debug,info,warn,error, default value is info
-	Endpoint             string `hcl:"Endpoint"`             // the endpoint for get Nacos server addresses
-	LogDir               string `hcl:"LogDir"`               // the directory for log, default is current path
-	AccessKey            string `hcl:"AccessKey"`            // the AccessKey for kms
-	SecretKey            string `hcl:"SecretKey"`            // the SecretKey for kms
-	Password             string `hcl:"Password"`             // the password for nacos auth
-	NamespaceID          string `hcl:"NamespaceId"`          // the namespaceId of Nacos
-	Username             string `hcl:"Username"`             // the username for nacos auth
-	BeatInterval         int    `hcl:"BeatInterval"`         // the time interval for sending beat to server,default value is 5000ms
-	UpdateThreadNum      int    `hcl:"UpdateThreadNum"`      // the number of goroutine for update nacos service info,default value is 20
-	MaxAge               int    `hcl:"MaxAge"`               // the max age of a log file, default value is 3
-	TimeoutMs            int    `hcl:"TimeoutMs"`            // timeout for requesting Nacos server, default value is 10000ms
-	OpenKMS              bool   `hcl:"OpenKMS"`              // it's to open kms,default is false. https://help.aliyun.com/product/28933.html
-	UpdateCacheWhenEmpty bool   `hcl:"UpdateCacheWhenEmpty"` // update cache when get empty service instance from server
-	NotLoadCacheAtStart  bool   `hcl:"NotLoadCacheAtStart"`  // not to load persistent nacos service info in CacheDir at start time
 }
 
 func (s ServiceParam) toNacosConfig() vo.GetServiceParam {
@@ -174,46 +134,135 @@ func (s ServiceParam) toNacosConfig() vo.GetServiceParam {
 	}
 }
 
-func (s ServerConfig) toNacosConfig() constant.ServerConfig {
-	return constant.ServerConfig{
-		Scheme:      s.Scheme,
-		ContextPath: s.ContextPath,
-		IpAddr:      s.IPAddr,
-		Port:        uint64(s.Port),
-	}
-}
-
-func (s ServerConfigs) toNacosConfig() []constant.ServerConfig {
-	c := make([]constant.ServerConfig, len(s))
-
-	for i, cnf := range s {
-		c[i] = cnf.toNacosConfig()
+func (n *Nacos) loadNaocsClient(configYamlFileName string) error {
+	var config Config
+	if err := ParseConfig(configYamlFileName, &config); err != nil {
+		return fmt.Errorf("parse config error: %w", err)
 	}
 
-	return c
-}
-
-func (s ClientConfig) toNacosConfig() constant.ClientConfig {
-	return constant.ClientConfig{
-		TimeoutMs:            uint64(s.TimeoutMs),
-		BeatInterval:         int64(s.BeatInterval),
-		NamespaceId:          s.NamespaceID,
-		Endpoint:             s.Endpoint,
-		RegionId:             s.RegionID,
-		AccessKey:            s.AccessKey,
-		SecretKey:            s.SecretKey,
-		OpenKMS:              s.OpenKMS,
-		CacheDir:             s.CacheDir,
-		UpdateThreadNum:      s.UpdateThreadNum,
-		NotLoadCacheAtStart:  s.NotLoadCacheAtStart,
-		UpdateCacheWhenEmpty: s.UpdateCacheWhenEmpty,
-		Username:             s.Username,
-		Password:             s.Password,
-		LogDir:               s.LogDir,
-		LogRollingConfig: &lumberjack.Logger{
-			MaxAge: s.MaxAge,
-		},
-
-		LogLevel: s.LogLevel,
+	// Another way of create naming client for service discovery (recommend)
+	clientParam := vo.NacosClientParam{
+		ClientConfig:  &config.ClientConfig,
+		ServerConfigs: config.ServerConfigs,
 	}
+	var err error
+
+	// Another way of create config client for dynamic configuration (recommend)
+	n.configClient, err = clients.NewConfigClient(clientParam)
+	if err != nil {
+		return fmt.Errorf("clients.NewConfigClient error: %w", err)
+	}
+	if config.ClientConfig.LogLevel == "" {
+		logger.SetLogger(&noLogger{})
+	}
+
+	var registerInstanceParam *vo.RegisterInstanceParam
+
+	p, err := GetRegisterParam(config, n.configClient)
+	if err != nil {
+		log.Printf("GetRegisterParam error: %v", err)
+	}
+	if p != "" {
+		registerInstanceParam, err = createRegisterInstanceParam(p)
+		if err != nil {
+			log.Printf("createRegisterInstanceParam error: %v", err)
+		}
+	} else if config.RegisterInstanceParam != nil {
+		registerInstanceParam = config.RegisterInstanceParam
+	}
+
+	n.namingClient, err = clients.NewNamingClient(clientParam)
+	if err != nil {
+		return fmt.Errorf("clients.NewNamingClient error: %w", err)
+	}
+	if config.ClientConfig.LogLevel == "" {
+		logger.SetLogger(&noLogger{})
+	}
+
+	if registerInstanceParam != nil {
+		success, err := n.namingClient.RegisterInstance(*registerInstanceParam)
+		if err != nil {
+			log.Fatalf("namingClient.RegisterInstance error: %v", err)
+		}
+		log.Printf("namingClient.RegisterInstance result: %t", success)
+	}
+
+	return nil
 }
+
+func createRegisterInstanceParam(registerParam string) (*vo.RegisterInstanceParam, error) {
+	tmpl, err := template.New("").Parse(registerParam)
+	if err != nil {
+		log.Fatalf("template.New error: %v", err)
+	}
+	ip, ips := goip.MainIP()
+	var buf bytes.Buffer
+	if err := tmpl.Execute(&buf, map[string]any{
+		"Ip":           ip,
+		"Ips":          strings.Join(ips, ","),
+		"Hostname":     Pick1(os.Hostname()),
+		"Pid":          os.Getpid(),
+		"RegisterTime": time.Now().Format(time.RFC3339),
+	}); err != nil {
+		return nil, fmt.Errorf("tmpl.Execute error: %w", err)
+	}
+
+	var param vo.RegisterInstanceParam
+	if err := yaml.UnmarshalWithOptions(buf.Bytes(), &param, yaml.WithKeyMatchMode(yaml.KeyMatchStrict)); err != nil {
+		return nil, fmt.Errorf("yaml.Unmarshal error: %w", err)
+	}
+	return &param, nil
+}
+
+func GetRegisterParam(config Config, c config_client.IConfigClient) (registerParam string, err error) {
+	if config.RegisterParam == nil {
+		return "", nil
+	}
+
+	_, err = c.GetConfig(vo.ConfigParam{Group: "xxx", DataId: "yyy"})
+	// 不存在，会返回错误，告知: config data not exist
+	if err != nil && strings.Contains(err.Error(), "config data not exist") {
+		log.Printf("W! clients.NewConfigClient get xxx.yyy error: %v", err)
+	}
+
+	if registerParam, err = c.GetConfig(*config.RegisterParam); err != nil {
+		return "", fmt.Errorf("clients.NewConfigClient error: %w", err)
+	}
+
+	return registerParam, nil
+}
+
+func Pick1[T any](a T, _ ...any) T {
+	return a
+}
+
+func ParseConfig(configYamlFileName string, v any) error {
+	config, err := os.ReadFile(configYamlFileName)
+	if err != nil {
+		return fmt.Errorf("os.ReadFile %s error: %w", configYamlFileName, err)
+	}
+
+	if err := yaml.UnmarshalWithOptions(config, v, yaml.WithKeyMatchMode(yaml.KeyMatchStrict)); err != nil {
+		return fmt.Errorf("yaml.Unmarshal error: %w", err)
+	}
+
+	return nil
+}
+
+type Config struct {
+	ServerConfigs         []constant.ServerConfig
+	ClientConfig          constant.ClientConfig
+	RegisterParam         *vo.ConfigParam
+	RegisterInstanceParam *vo.RegisterInstanceParam
+}
+
+type noLogger struct{}
+
+func (l noLogger) Info(args ...interface{})               {}
+func (l noLogger) Warn(args ...interface{})               {}
+func (l noLogger) Error(args ...interface{})              {}
+func (l noLogger) Debug(args ...interface{})              {}
+func (l noLogger) Infof(fmt string, args ...interface{})  {}
+func (l noLogger) Warnf(fmt string, args ...interface{})  {}
+func (l noLogger) Errorf(fmt string, args ...interface{}) {}
+func (l noLogger) Debugf(fmt string, args ...interface{}) {}
