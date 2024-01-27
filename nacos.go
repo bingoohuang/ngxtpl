@@ -29,6 +29,8 @@ type Nacos struct {
 
 	namingClient naming_client.INamingClient
 	configClient config_client.IConfigClient
+	parsed       bool
+	parseErr     error
 }
 
 // Get gets the value of key from mysql.
@@ -112,8 +114,17 @@ func createUpstreamHost(s model.Instance) map[string]interface{} {
 
 // Parse parses the nacos config.
 func (n *Nacos) Parse() (DataSource, error) {
-	if err := n.loadNaocsClient(n.ConfigFile); err != nil {
-		return nil, err
+	if n.parsed {
+		if n.parseErr != nil {
+			return nil, n.parseErr
+		}
+		return n, nil
+	}
+
+	n.parsed = true
+	n.parseErr = n.loadNaocsClient(n.ConfigFile)
+	if n.parseErr != nil {
+		return nil, n.parseErr
 	}
 
 	return n, nil

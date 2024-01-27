@@ -1,5 +1,5 @@
 nacos {
-  configFile = "nacos.yaml"
+  configFile = "testdata/nacos.yaml"
   serviceParam {
     ServiceName = "demogo",
     Clusters = ["clustera"]

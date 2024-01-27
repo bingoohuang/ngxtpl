@@ -76,6 +76,11 @@ func (c *Cfg) Parse() error {
 var ErrCfg = errors.New("Errors in the config file")
 
 func (c *Cfg) parseDataSource() (err error) {
+	if c.Nacos != nil {
+		// nacos 只要配置，就初始化，可能需要注册自己
+		c.Nacos.Parse()
+	}
+
 	switch v := c.Tpl.DataSource; v {
 	case "redis":
 		c.dataSource, err = c.Redis.Parse()
