@@ -18,6 +18,7 @@ type Redis struct {
 	Password    string `hcl:"password"`
 	ServicesKey string `hcl:"servicesKey"`
 	ResultKey   string `hcl:"resultKey"`
+	Db          int    `hcl:"db"`
 	Cluster     bool   `hcl:"cluster"`
 }
 
@@ -44,7 +45,7 @@ func (r Redis) createClient() redis.UniversalClient {
 		return redis.NewClusterClient(&redis.ClusterOptions{Addrs: addrs, Password: r.Password})
 	}
 
-	return redis.NewClient(&redis.Options{Addr: r.Addr, Password: r.Password})
+	return redis.NewClient(&redis.Options{Addr: r.Addr, Password: r.Password, DB: r.Db})
 }
 
 // Write writes key and it's value to redis.

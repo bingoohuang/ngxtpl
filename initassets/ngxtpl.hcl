@@ -22,7 +22,7 @@ tpl {
 
 //nacos {
 //  clientConfig {
-//    configFile = "nacos.yaml"
+//    configFile = "/path/to/nacos.yaml"
 //  }
 //
 //  serverConfigs = [

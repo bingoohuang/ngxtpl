@@ -3,8 +3,36 @@
 golang nginx template.
 
 1. build: `make install`
-1. create a demo config file `ngxtpl --demo`.
-1. for http get/post mocking `go get github.com/bingoohuang/httplive/...`, `httplive -d testdata/httplive.db`
+2. create a demo config file `ngxtpl --demo`.
+3. for http get/post mocking `go get github.com/bingoohuang/httplive/...`, `httplive -d testdata/httplive.db`
+
+## 启动时，向 nacos 注册自己
+
+1. 在配置文件 ngxtpl.hcl 中添加 nacos 配置，参考 [demo](testdata/ngxtpl.hcl)
+
+   ```hcl
+   nacos {
+     configFile = "/some/path/nacos.yaml"
+   }
+   ```
+
+2. 创建 nacos 配置文件 `/some/path/nacos.yaml`，示例 [demo](testdata/nacos.yaml)
+
+## 支持 redis-cluster
+
+```hcl
+redis {
+  addr = "localhost:6379" # 多个地址以逗号分隔
+  password = ""
+  cluster = true # 支持 redis-cluster 的开关
+  db = 0
+  # servicesKey = "services"
+  servicesKey = "__gateway_redis__ upstreams"
+  # 如果是hash的，servicesKey = "hashKey field"
+  resultKey = "__gateway_redis__ upstreams_result"
+}
+
+```
 
 ![image](https://user-images.githubusercontent.com/1940588/100842805-57feb500-34b4-11eb-9edf-7b3fd6091178.png)
 

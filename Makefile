@@ -1,5 +1,5 @@
 .PHONY: test install git.commit git.branch default
-all: test install
+all: install
 
 app=$(notdir $(shell pwd))
 appVersion := 1.0.0
@@ -20,7 +20,9 @@ extldflags := -extldflags -static
 # https://github.com/kubermatic/kubeone/blob/master/Makefile
 flags1 = -s -w -X $(pkg).BuildTime=$(buildTime) -X $(pkg).AppVersion=$(appVersion) -X $(pkg).GitCommit=$(gitInfo) -X $(pkg).GoVersion=$(goVersion)
 flags2 = ${extldflags} ${flags1}
-goinstall = go install -trimpath -ldflags='${flags1}' ./...
+buildTags = $(if $(TAGS),-tags=$(TAGS),)
+buildFlags = ${buildTags} -trimpath -ldflags="'${flags1}'"
+goinstall = go install ${buildTags} -trimpath -ldflags='${flags1}' ./...
 gobin := $(shell go env GOBIN)
 # try $GOPATN/bin if $gobin is empty
 gobin := $(if $(gobin),$(gobin),$(shell go env GOPATH)/bin)
@@ -28,6 +30,10 @@ gobin := $(if $(gobin),$(gobin),$(shell go env GOPATH)/bin)
 export GOPROXY=https://mirrors.aliyun.com/goproxy/,https://goproxy.cn,https://goproxy.io,direct
 # Active module mode, as we use go modules to manage dependencies
 export GO111MODULE=on
+
+# usage: t=$(mktemp); echo $t; echo "set -x; go build -o build/rig_linux_arm64 $(make -f ~/github/gg/Makefile build.flags) ./cmd/rig" > $t && sh $t
+build.flags:
+	@echo ${buildFlags}
 
 git.commit:
 	echo ${gitCommit} > git.commit
@@ -48,6 +54,13 @@ lint-all:
 lint:
 	golangci-lint run ./...
 
+fmt-update:
+	go install mvdan.cc/gofumpt@latest
+	go install golang.org/x/tools/cmd/...@latest 	# for goimports
+	go install github.com/mgechev/revive@master
+	go install github.com/daixiang0/gci@latest
+	go install github.com/google/osv-scanner/cmd/osv-scanner@v1
+
 fmt:
 	gofumpt -l -w .
 	gofmt -s -w .
@@ -55,17 +68,36 @@ fmt:
 	go fmt ./...
 	revive .
 	goimports -w .
-	gci -w -local github.com/daixiang0/gci
+	gci write .
+	osv-scanner -r .
 
-install: init
+install-upx: init
 	${goinstall}
 	upx --best --lzma ${gobin}/${app}
 	ls -lh ${gobin}/${app}
+
+install: init
+	${goinstall}
+	ls -lh ${gobin}/${app}*
+
 linux: init
 	GOOS=linux GOARCH=amd64 ${goinstall}
-	upx --best --lzma ${gobin}/linux_amd64/${app}
 	ls -lh  ${gobin}/linux_amd64/${app}
+linux-upx: init
+	GOOS=linux GOARCH=amd64 ${goinstall}
+	upx --best --lzma ${gobin}/linux_amd64/${app}*
+	ls -lh  ${gobin}/linux_amd64/${app}*
+windows: init
+	GOOS=windows GOARCH=amd64 ${goinstall}
+	ls -lh  ${gobin}/windows_amd64/${app}.exe
+windows-upx: init
+	GOOS=windows GOARCH=amd64 ${goinstall}
+	upx --best --lzma ${gobin}/windows_amd64/${app}.exe
+	ls -lh  ${gobin}/windows_amd64/${app}.exe
 arm: init
+	GOOS=linux GOARCH=arm64 ${goinstall}
+	ls -lh  ${gobin}/linux_arm64/${app}
+arm-upx: init
 	GOOS=linux GOARCH=arm64 ${goinstall}
 	upx --best --lzma ${gobin}/linux_arm64/${app}
 	ls -lh  ${gobin}/linux_arm64/${app}

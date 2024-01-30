@@ -2,7 +2,7 @@ module github.com/bingoohuang/ngxtpl
 
 go 1.18
 
-replace github.com/goccy/go-yaml => github.com/goldstd/go-yaml v0.0.0-20240127014032-e203c77de48f
+replace github.com/goccy/go-yaml => github.com/goldstd/go-yaml v0.0.0-20240129091131-ddc927665727
 
 require (
 	github.com/bingoohuang/gg v0.0.0-20240127024150-7fbfc15d5fb9

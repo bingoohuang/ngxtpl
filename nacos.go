@@ -167,19 +167,25 @@ func (n *Nacos) loadNaocsClient(configYamlFileName string) error {
 		logger.SetLogger(&noLogger{})
 	}
 
-	var registerInstanceParam *vo.RegisterInstanceParam
-
 	p, err := GetRegisterParam(config, n.configClient)
 	if err != nil {
 		log.Printf("GetRegisterParam error: %v", err)
 	}
+
+	if p == "" && config.RegisterInstanceParam != nil {
+		pbyte, err := yaml.MarshalWithOptions(config.RegisterInstanceParam, yaml.WithEncodeKeyMatchMode(yaml.KeyMatchStrict))
+		if err != nil {
+			log.Printf("yaml.Unmarshal error: %v", err)
+		}
+		p = string(pbyte)
+	}
+
+	var registerInstanceParam *vo.RegisterInstanceParam
 	if p != "" {
 		registerInstanceParam, err = createRegisterInstanceParam(p)
 		if err != nil {
 			log.Printf("createRegisterInstanceParam error: %v", err)
 		}
-	} else if config.RegisterInstanceParam != nil {
-		registerInstanceParam = config.RegisterInstanceParam
 	}
 
 	n.namingClient, err = clients.NewNamingClient(clientParam)

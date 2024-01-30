@@ -31,27 +31,25 @@ ClientConfig:
   # EndpointQueryParams:  # the address server  endpoint query params
   # ClusterName:          # the address server  clusterName
 
-
 # 1. nacos 读取指定 Group.DataId 的 配置 用于 RegisterInstanceParam 模板
 RegisterParam:
   Group: ngxtpl
   DataId: RegisterParam
 
 # 2. 或者直接在此配置 RegisterInstanceParam 模板
-
-# RegisterInstanceParam:
-# # ngxtpl 启动时，向 nacos 注册自身的信息模板
-# Ip: "{{.Ip}}"
-# Port: 8848
-# ServiceName: ngxtpl
-# Weight: 10
-# Enable: true
-# Healthy: true
-# Ephemeral: true
-# Metadata:
-#   ips: "{{.Ips}}"
-#   hostname: "{{.Hostname}}"
-#   pid: "{{.Pid}}"
-#   registerTime: "{{.RegisterTime}}"
-# ClusterName: ngxtpl
-# GroupName: ngxtpl
+RegisterInstanceParam:
+# ngxtpl 启动时，向 nacos 注册自身的信息模板
+  Ip: "{{.Ip}}"
+  Port: 8848
+  ServiceName: ngxtpl
+  Weight: 10
+  Enable: true
+  Healthy: true
+  Ephemeral: true
+  Metadata:
+    ips: "{{.Ips}}"
+    hostname: "{{.Hostname}}"
+    pid: "{{.Pid}}"
+    registerTime: "{{.RegisterTime}}"
+  ClusterName: ngxtpl
+  GroupName: ngxtpl
